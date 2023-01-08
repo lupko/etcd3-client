@@ -1,269 +1,234 @@
 import functools
 import inspect
+import queue
 import threading
+from typing import (
+    Any,
+    BinaryIO,
+    Callable,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import grpc
 import grpc._channel
+from typing_extensions import TypeAlias
 
-from six.moves import queue
-
-import etcd3.etcdrpc as etcdrpc
-import etcd3.exceptions as exceptions
-import etcd3.leases as leases
-import etcd3.locks as locks
-import etcd3.members
-import etcd3.transactions as transactions
-import etcd3.utils as utils
-import etcd3.watch as watch
+import etcd3.rpc as etcdrpc
+from etcd3 import Alarm, KVMetadata, Status
+from etcd3.base import KVResult, Member
+from etcd3.events import Event
+from etcd3.exceptions import (
+    ConnectionFailedError,
+    ConnectionTimeoutError,
+    InternalServerError,
+    PreconditionFailedError,
+    WatchTimedOut,
+)
+from etcd3.leases import Lease
+from etcd3.request_factory import (
+    AlarmType,
+    RangeSortOrder,
+    RangeSortTarget,
+    WatchFilterType,
+    build_alarm_request,
+    build_delete_request,
+    build_get_range_request,
+    build_put_request,
+    build_tx_request,
+)
+from etcd3.transactions import Transactions, TxCondition, TxOp
+from etcd3.utils import get_secure_creds, range_end_for_key
+from etcd3.watch import WatchCallback, Watcher, WatchResponse
 
 _EXCEPTIONS_BY_CODE = {
-    grpc.StatusCode.INTERNAL: exceptions.InternalServerError,
-    grpc.StatusCode.UNAVAILABLE: exceptions.ConnectionFailedError,
-    grpc.StatusCode.DEADLINE_EXCEEDED: exceptions.ConnectionTimeoutError,
-    grpc.StatusCode.FAILED_PRECONDITION: exceptions.PreconditionFailedError,
+    grpc.StatusCode.INTERNAL: InternalServerError,
+    grpc.StatusCode.UNAVAILABLE: ConnectionFailedError,
+    grpc.StatusCode.DEADLINE_EXCEEDED: ConnectionTimeoutError,
+    grpc.StatusCode.FAILED_PRECONDITION: PreconditionFailedError,
 }
 
 
-def _translate_exception(exc):
-    code = exc.code()
+def _translate_exception(exc: grpc.RpcError) -> None:
+    call = cast(grpc.Call, exc)
+    code = call.code()
+    details = call.details()
+
+    # for some reason, sometimes, on timeout grpc raises error with status UNKNOWN and detail
+    # "context deadline exceeded"; it can still raise DEADLINE_EXCEEDED but
+    if code == grpc.StatusCode.UNKNOWN and details == "context deadline exceeded":
+        raise ConnectionTimeoutError from exc
+
     exception = _EXCEPTIONS_BY_CODE.get(code)
+
     if exception is None:
         raise
-    raise exception
+
+    raise exception from exc
 
 
-def _handle_errors(f):
+FuncT = TypeVar("FuncT", bound=Callable[..., Any])
+
+
+def _handle_errors(f: FuncT) -> FuncT:
     if inspect.isgeneratorfunction(f):
-        def handler(*args, **kwargs):
+
+        @functools.wraps(f)
+        def handler(*args: Any, **kwargs: Any) -> Any:
             try:
                 for data in f(*args, **kwargs):
                     yield data
             except grpc.RpcError as exc:
                 _translate_exception(exc)
+
     else:
-        def handler(*args, **kwargs):
+
+        @functools.wraps(f)
+        def handler(*args: Any, **kwargs: Any) -> Any:
             try:
                 return f(*args, **kwargs)
             except grpc.RpcError as exc:
                 _translate_exception(exc)
 
-    return functools.wraps(f)(handler)
+    return cast(FuncT, handler)
 
 
-class Transactions(object):
-    def __init__(self):
-        self.value = transactions.Value
-        self.version = transactions.Version
-        self.create = transactions.Create
-        self.mod = transactions.Mod
-
-        self.put = transactions.Put
-        self.get = transactions.Get
-        self.delete = transactions.Delete
-        self.txn = transactions.Txn
+TxResponse: TypeAlias = Union[etcdrpc.ResponseOp, List[KVResult]]
+TxResponses: TypeAlias = List[TxResponse]
+TxResult: TypeAlias = Tuple[bool, TxResponses]
 
 
-class KVMetadata(object):
-    def __init__(self, keyvalue, header):
-        self.key = keyvalue.key
-        self.create_revision = keyvalue.create_revision
-        self.mod_revision = keyvalue.mod_revision
-        self.version = keyvalue.version
-        self.lease_id = keyvalue.lease
-        self.response_header = header
-
-
-class Status(object):
-    def __init__(self, version, db_size, leader, raft_index, raft_term):
-        self.version = version
-        self.db_size = db_size
-        self.leader = leader
-        self.raft_index = raft_index
-        self.raft_term = raft_term
-
-
-class Alarm(object):
-    def __init__(self, alarm_type, member_id):
-        self.alarm_type = alarm_type
-        self.member_id = member_id
-
-
-class EtcdTokenCallCredentials(grpc.AuthMetadataPlugin):
+class _EtcdTokenCallCredentials(grpc.AuthMetadataPlugin):
     """Metadata wrapper for raw access token credentials."""
 
-    def __init__(self, access_token):
+    def __init__(self, access_token: str):
         self._access_token = access_token
 
-    def __call__(self, context, callback):
-        metadata = (('token', self._access_token),)
+    def __call__(
+        self,
+        context: grpc.AuthMetadataContext,
+        callback: grpc.AuthMetadataPluginCallback,
+    ) -> None:
+        metadata = (("token", self._access_token),)
         callback(metadata, None)
 
 
-class Etcd3Client(object):
-    def __init__(self, host='localhost', port=2379,
-                 ca_cert=None, cert_key=None, cert_cert=None, timeout=None,
-                 user=None, password=None, grpc_options=None):
+class Etcd3Client:
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 2379,
+        ca_cert: Optional[str] = None,
+        cert_key: Optional[str] = None,
+        cert_cert: Optional[str] = None,
+        timeout: Optional[int | float] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
+        grpc_options: Optional[List[Tuple[str, Any]]] = None,
+    ):
 
-        self._url = '{host}:{port}'.format(host=host, port=port)
-        self.metadata = None
+        self._url = "{host}:{port}".format(host=host, port=port)
+        self.metadata: Optional[Tuple[Tuple[str, str], ...]] = None
 
         cert_params = [c is not None for c in (cert_cert, cert_key)]
         if ca_cert is not None:
             if all(cert_params):
-                credentials = self._get_secure_creds(
-                    ca_cert,
-                    cert_key,
-                    cert_cert
-                )
+                credentials = get_secure_creds(ca_cert, cert_key, cert_cert)
                 self.uses_secure_channel = True
-                self.channel = grpc.secure_channel(self._url, credentials,
-                                                   options=grpc_options)
+                self.channel = grpc.secure_channel(
+                    self._url, credentials, options=grpc_options
+                )
             elif any(cert_params):
                 # some of the cert parameters are set
                 raise ValueError(
-                    'to use a secure channel ca_cert is required by itself, '
-                    'or cert_cert and cert_key must both be specified.')
+                    "to use a secure channel ca_cert is required by itself, "
+                    "or cert_cert and cert_key must both be specified."
+                )
             else:
-                credentials = self._get_secure_creds(ca_cert, None, None)
+                credentials = get_secure_creds(ca_cert, None, None)
                 self.uses_secure_channel = True
-                self.channel = grpc.secure_channel(self._url, credentials,
-                                                   options=grpc_options)
+                self.channel = grpc.secure_channel(
+                    self._url, credentials, options=grpc_options
+                )
         else:
             self.uses_secure_channel = False
-            self.channel = grpc.insecure_channel(self._url,
-                                                 options=grpc_options)
+            self.channel = grpc.insecure_channel(self._url, options=grpc_options)
 
         self.timeout = timeout
-        self.call_credentials = None
+        self.call_credentials: Optional[grpc.CallCredentials] = None
 
         cred_params = [c is not None for c in (user, password)]
 
-        if all(cred_params):
+        if user is not None and password is not None:
             self.auth_stub = etcdrpc.AuthStub(self.channel)
-            auth_request = etcdrpc.AuthenticateRequest(
-                name=user,
-                password=password
-            )
+            auth_request = etcdrpc.AuthenticateRequest(name=user, password=password)
 
-            resp = self.auth_stub.Authenticate(auth_request, self.timeout)
-            self.metadata = (('token', resp.token),)
+            resp: etcdrpc.AuthenticateResponse = self.auth_stub.Authenticate(
+                auth_request, self.timeout
+            )
+            self.metadata = (("token", resp.token),)
             self.call_credentials = grpc.metadata_call_credentials(
-                EtcdTokenCallCredentials(resp.token))
+                _EtcdTokenCallCredentials(resp.token)
+            )
 
         elif any(cred_params):
             raise Exception(
-                'if using authentication credentials both user and password '
-                'must be specified.'
+                "if using authentication credentials both user and password "
+                "must be specified."
             )
 
         self.kvstub = etcdrpc.KVStub(self.channel)
-        self.watcher = watch.Watcher(
+        self.watcher = Watcher(
             etcdrpc.WatchStub(self.channel),
             timeout=self.timeout,
             call_credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
         self.clusterstub = etcdrpc.ClusterStub(self.channel)
         self.leasestub = etcdrpc.LeaseStub(self.channel)
         self.maintenancestub = etcdrpc.MaintenanceStub(self.channel)
-        self.transactions = Transactions()
 
-    def close(self):
+        self.transactions = Transactions()
+        self.tx = self.transactions
+
+    def close(self) -> None:
         """Call the GRPC channel close semantics."""
-        if hasattr(self, 'channel'):
+        if hasattr(self, "channel"):
             self.channel.close()
 
-    def __enter__(self):
+    def __enter__(self) -> "Etcd3Client":
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self.close()
 
-    def _get_secure_creds(self, ca_cert, cert_key=None, cert_cert=None):
-        cert_key_file = None
-        cert_cert_file = None
-
-        with open(ca_cert, 'rb') as f:
-            ca_cert_file = f.read()
-
-        if cert_key is not None:
-            with open(cert_key, 'rb') as f:
-                cert_key_file = f.read()
-
-        if cert_cert is not None:
-            with open(cert_cert, 'rb') as f:
-                cert_cert_file = f.read()
-
-        return grpc.ssl_channel_credentials(
-            ca_cert_file,
-            cert_key_file,
-            cert_cert_file
-        )
-
-    def _build_get_range_request(self, key,
-                                 range_end=None,
-                                 limit=None,
-                                 revision=None,
-                                 sort_order=None,
-                                 sort_target='key',
-                                 serializable=False,
-                                 keys_only=False,
-                                 count_only=None,
-                                 min_mod_revision=None,
-                                 max_mod_revision=None,
-                                 min_create_revision=None,
-                                 max_create_revision=None):
-        range_request = etcdrpc.RangeRequest()
-        range_request.key = utils.to_bytes(key)
-        range_request.keys_only = keys_only
-        if range_end is not None:
-            range_request.range_end = utils.to_bytes(range_end)
-
-        if sort_order is None:
-            range_request.sort_order = etcdrpc.RangeRequest.NONE
-        elif sort_order == 'ascend':
-            range_request.sort_order = etcdrpc.RangeRequest.ASCEND
-        elif sort_order == 'descend':
-            range_request.sort_order = etcdrpc.RangeRequest.DESCEND
-        else:
-            raise ValueError('unknown sort order: "{}"'.format(sort_order))
-
-        if sort_target is None or sort_target == 'key':
-            range_request.sort_target = etcdrpc.RangeRequest.KEY
-        elif sort_target == 'version':
-            range_request.sort_target = etcdrpc.RangeRequest.VERSION
-        elif sort_target == 'create':
-            range_request.sort_target = etcdrpc.RangeRequest.CREATE
-        elif sort_target == 'mod':
-            range_request.sort_target = etcdrpc.RangeRequest.MOD
-        elif sort_target == 'value':
-            range_request.sort_target = etcdrpc.RangeRequest.VALUE
-        else:
-            raise ValueError('sort_target must be one of "key", '
-                             '"version", "create", "mod" or "value"')
-
-        range_request.serializable = serializable
-
-        return range_request
-
     @_handle_errors
-    def get_response(self, key, serializable=False):
+    def get_response(
+        self, key: Union[str, bytes], serializable: bool = False
+    ) -> etcdrpc.RangeResponse:
         """Get the value of a key from etcd."""
-        range_request = self._build_get_range_request(
-            key,
-            serializable=serializable
-        )
+        range_request = build_get_range_request(key, serializable=serializable)
 
         return self.kvstub.Range(
             range_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-    def get(self, key, **kwargs):
+    def get(
+        self, key: Union[str, bytes], serializable: bool = False
+    ) -> Union[Tuple[None, None], KVResult]:
         """
-        Get the value of a key from etcd.
+        Get the value and metadata of a key from etcd. If the key does not exist, then both value and metadata
+        will be None.
 
         example usage:
 
@@ -280,120 +245,223 @@ class Etcd3Client(object):
         :returns: value of key and metadata
         :rtype: bytes, ``KVMetadata``
         """
-        range_response = self.get_response(key, **kwargs)
+        range_response = self.get_response(key, serializable)
+
         if range_response.count < 1:
             return None, None
-        else:
-            kv = range_response.kvs.pop()
-            return kv.value, KVMetadata(kv, range_response.header)
+
+        kv: etcdrpc.KeyValue = range_response.kvs.pop()
+        return kv.value, KVMetadata.create(kv, range_response.header)
+
+    def get_strict(
+        self, key: Union[str, bytes], serializable: bool = False
+    ) -> KVResult:
+        """
+        Get the value of a key from etcd; fails with KeyError if no such key exists.
+
+        example usage:
+
+        .. code-block:: python
+
+            >>> import etcd3
+            >>> etcd = etcd3.client()
+            >>> etcd.get_strict('/thing/key')
+            'hello world'
+
+        :param key: key in etcd to get
+        :param serializable: whether to allow serializable reads. This can
+            result in stale reads
+        :returns: value of key and metadata
+        :rtype: bytes, ``KVMetadata``
+        :raise: KeyError if the requested key is not
+        """
+        range_response = self.get_response(key, serializable)
+
+        if range_response.count < 1:
+            raise KeyError(key)
+
+        kv: etcdrpc.KeyValue = range_response.kvs.pop()
+        return kv.value, KVMetadata.create(kv, range_response.header)
 
     @_handle_errors
-    def get_prefix_response(self, key_prefix, **kwargs):
+    def get_prefix_response(
+        self,
+        key_prefix: Union[str, bytes],
+        keys_only: bool = False,
+        sort_order: Optional[RangeSortOrder] = None,
+        sort_target: Optional[RangeSortTarget] = None,
+        serializable: bool = False,
+    ) -> etcdrpc.RangeResponse:
         """Get a range of keys with a prefix."""
-        if any(kwarg in kwargs for kwarg in ("key", "range_end")):
-            raise TypeError("Don't use key or range_end with prefix")
-
-        range_request = self._build_get_range_request(
+        range_request = build_get_range_request(
             key=key_prefix,
-            range_end=utils.increment_last_byte(utils.to_bytes(key_prefix)),
-            **kwargs
+            range_end=range_end_for_key(key_prefix),
+            keys_only=keys_only,
+            sort_order=sort_order,
+            sort_target=sort_target,
+            serializable=serializable,
         )
 
         return self.kvstub.Range(
             range_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-    def get_prefix(self, key_prefix, **kwargs):
+    def get_prefix(
+        self,
+        key_prefix: Union[str, bytes],
+        keys_only: bool = False,
+        sort_order: Optional[RangeSortOrder] = None,
+        sort_target: Optional[RangeSortTarget] = None,
+        serializable: bool = False,
+    ) -> Generator[KVResult, None, None]:
         """
         Get a range of keys with a prefix.
 
         :param key_prefix: first key in range
         :param keys_only: if True, retrieve only the keys, not the values
+        :param sort_order: optionally specify result sorting; one of asc, desc, ascend, descend
+        :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
+        :param serializable: whether to allow serializable reads. This can
+            result in stale reads
 
         :returns: sequence of (value, metadata) tuples
         """
-        range_response = self.get_prefix_response(key_prefix, **kwargs)
-        return (
-            (kv.value, KVMetadata(kv, range_response.header))
-            for kv in range_response.kvs
-        )
-
-    @_handle_errors
-    def get_range_response(self, range_start, range_end, sort_order=None,
-                           sort_target='key', **kwargs):
-        """Get a range of keys."""
-        range_request = self._build_get_range_request(
-            key=range_start,
-            range_end=range_end,
+        range_response = self.get_prefix_response(
+            key_prefix=key_prefix,
+            keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
-            **kwargs
+            serializable=serializable,
+        )
+
+        for kv in range_response.kvs:
+            yield kv.value, KVMetadata.create(kv, range_response.header)
+
+    @_handle_errors
+    def get_range_response(
+        self,
+        range_start: Union[str, bytes],
+        range_end: Union[str, bytes],
+        keys_only: bool = False,
+        sort_order: Optional[RangeSortOrder] = None,
+        sort_target: Optional[RangeSortTarget] = None,
+        serializable: bool = False,
+    ) -> etcdrpc.RangeResponse:
+        """Get a range of keys."""
+        range_request = build_get_range_request(
+            key=range_start,
+            range_end=range_end,
+            keys_only=keys_only,
+            sort_order=sort_order,
+            sort_target=sort_target,
+            serializable=serializable,
         )
 
         return self.kvstub.Range(
             range_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-    def get_range(self, range_start, range_end, **kwargs):
+    def get_range(
+        self,
+        range_start: Union[str, bytes],
+        range_end: Union[str, bytes],
+        keys_only: bool = False,
+        sort_order: Optional[RangeSortOrder] = None,
+        sort_target: Optional[RangeSortTarget] = None,
+        serializable: bool = False,
+    ) -> Generator[KVResult, None, None]:
         """
         Get a range of keys.
 
         :param range_start: first key in range
         :param range_end: last key in range
+        :param keys_only: if True, retrieve only the keys, not the values
+        :param sort_order: optionally specify result sorting; one of asc, desc, ascend, descend
+        :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
+        :param serializable: whether to allow serializable reads. This can
+            result in stale reads
+
         :returns: sequence of (value, metadata) tuples
         """
-        range_response = self.get_range_response(range_start, range_end,
-                                                 **kwargs)
-        for kv in range_response.kvs:
-            yield (kv.value, KVMetadata(kv, range_response.header))
-
-    @_handle_errors
-    def get_all_response(self, sort_order=None, sort_target='key',
-                         keys_only=False):
-        """Get all keys currently stored in etcd."""
-        range_request = self._build_get_range_request(
-            key=b'\0',
-            range_end=b'\0',
+        range_response = self.get_range_response(
+            range_start=range_start,
+            range_end=range_end,
+            keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            serializable=serializable,
+        )
+
+        for kv in range_response.kvs:
+            yield kv.value, KVMetadata.create(kv, range_response.header)
+
+    @_handle_errors
+    def get_all_response(
+        self,
+        keys_only: bool = False,
+        sort_order: Optional[RangeSortOrder] = None,
+        sort_target: Optional[RangeSortTarget] = None,
+        serializable: bool = False,
+    ) -> etcdrpc.RangeResponse:
+        """Get all keys currently stored in etcd."""
+        range_request = build_get_range_request(
+            key=b"\0",
+            range_end=b"\0",
             keys_only=keys_only,
+            sort_order=sort_order,
+            sort_target=sort_target,
+            serializable=serializable,
         )
 
         return self.kvstub.Range(
             range_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-    def get_all(self, **kwargs):
+    def get_all(
+        self,
+        keys_only: bool = False,
+        sort_order: Optional[RangeSortOrder] = None,
+        sort_target: Optional[RangeSortTarget] = None,
+        serializable: bool = False,
+    ) -> Generator[KVResult, None, None]:
         """
         Get all keys currently stored in etcd.
 
         :param keys_only: if True, retrieve only the keys, not the values
+        :param sort_order: optionally specify result sorting; one of asc, desc, ascend, descend
+        :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
+        :param serializable: whether to allow serializable reads. This can
+            result in stale reads
         :returns: sequence of (value, metadata) tuples
         """
-        range_response = self.get_all_response(**kwargs)
+
+        range_response = self.get_all_response(
+            keys_only=keys_only,
+            sort_order=sort_order,
+            sort_target=sort_target,
+            serializable=serializable,
+        )
+
         for kv in range_response.kvs:
-            yield (kv.value, KVMetadata(kv, range_response.header))
-
-    def _build_put_request(self, key, value, lease=None, prev_kv=False):
-        put_request = etcdrpc.PutRequest()
-        put_request.key = utils.to_bytes(key)
-        put_request.value = utils.to_bytes(value)
-        put_request.lease = utils.lease_to_id(lease)
-        put_request.prev_kv = prev_kv
-
-        return put_request
+            yield kv.value, KVMetadata.create(kv, range_response.header)
 
     @_handle_errors
-    def put(self, key, value, lease=None, prev_kv=False):
+    def put(
+        self,
+        key: Union[str, bytes],
+        value: Union[str, bytes],
+        lease: Optional[Union[int, Lease]] = None,
+        prev_kv: bool = False,
+    ) -> etcdrpc.PutResponse:
         """
         Save a value to etcd.
 
@@ -403,7 +471,7 @@ class Etcd3Client(object):
 
             >>> import etcd3
             >>> etcd = etcd3.client()
-            >>> etcd.put('/thing/key', 'hello world')
+            >>> etcd.put('/thing/key', b'hello world')
 
         :param key: key in etcd to set
         :param value: value to set key to
@@ -415,22 +483,28 @@ class Etcd3Client(object):
         :returns: a response containing a header and the prev_kv
         :rtype: :class:`.rpc_pb2.PutResponse`
         """
-        put_request = self._build_put_request(key, value, lease=lease,
-                                              prev_kv=prev_kv)
+        put_request = build_put_request(key, value, lease=lease, prev_kv=prev_kv)
+
         return self.kvstub.Put(
             put_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-    @_handle_errors
-    def put_if_not_exists(self, key, value, lease=None):
+    def put_if_not_exists(
+        self,
+        key: Union[str, bytes],
+        value: Union[str, bytes],
+        lease: Optional[Union[int, Lease]] = None,
+    ) -> Tuple[bool, Optional[etcdrpc.PutResponse]]:
         """
         Atomically puts a value only if the key previously had no value.
 
-        This is the etcdv3 equivalent to setting a key with the etcdv2
-        parameter prevExist=false.
+        This operation happens in a transaction.
+
+        On success, returns tuple of True and the response to the Put operation.
+        On failure, returns False and the response is None
 
         :param key: key in etcd to put
         :param value: value to be written to key
@@ -441,101 +515,130 @@ class Etcd3Client(object):
                   ``False`` otherwise
         :rtype: bool
         """
-        status, _ = self.transaction(
-            compare=[self.transactions.create(key) == '0'],
+        status, response = self.transaction(
+            compare=[self.transactions.create(key) == "0"],
             success=[self.transactions.put(key, value, lease=lease)],
             failure=[],
         )
 
-        return status
+        if status:
+            return True, cast(etcdrpc.ResponseOp, response[0]).response_put
 
-    @_handle_errors
-    def replace(self, key, initial_value, new_value):
+        return False, None
+
+    def replace(
+        self,
+        key: Union[str, bytes],
+        initial_value: Union[str, bytes],
+        new_value: Union[str, bytes],
+        lease: Optional[Union[int, Lease]] = None,
+    ) -> Tuple[bool, Optional[etcdrpc.PutResponse]]:
         """
         Atomically replace the value of a key with a new value.
 
         This compares the current value of a key, then replaces it with a new
-        value if it is equal to a specified value. This operation takes place
+        value if it is equal to a specified value. This operation happens
         in a transaction.
+
+        On success, returns tuple of True and the response to the Put operation.
+        On failure, returns False and the response is None
 
         :param key: key in etcd to replace
         :param initial_value: old value to replace
         :type initial_value: bytes
         :param new_value: new value of the key
         :type new_value: bytes
-        :returns: status of transaction, ``True`` if the replace was
-                  successful, ``False`` otherwise
+        :param lease: Lease to associate with the key (if the replace is successful).
+        :type lease: either :class:`.Lease`, or int (ID of lease)
+        :returns: status of transaction, ``True`` if the replace was successful, ``False`` otherwise
         :rtype: bool
         """
-        status, _ = self.transaction(
+        status, response = self.transaction(
             compare=[self.transactions.value(key) == initial_value],
-            success=[self.transactions.put(key, new_value)],
+            success=[self.transactions.put(key, new_value, lease=lease)],
             failure=[],
         )
 
-        return status
+        if status:
+            return True, cast(etcdrpc.ResponseOp, response[0]).response_put
 
-    def _build_delete_request(self, key,
-                              range_end=None,
-                              prev_kv=False):
-        delete_request = etcdrpc.DeleteRangeRequest()
-        delete_request.key = utils.to_bytes(key)
-        delete_request.prev_kv = prev_kv
-
-        if range_end is not None:
-            delete_request.range_end = utils.to_bytes(range_end)
-
-        return delete_request
+        return False, None
 
     @_handle_errors
-    def delete(self, key, prev_kv=False, return_response=False):
+    def delete(
+        self,
+        key: Union[str, bytes],
+        prev_kv: bool = False,
+    ) -> Tuple[bool, Optional[etcdrpc.DeleteRangeResponse]]:
         """
         Delete a single key in etcd.
+
+        If the key was deleted, returns tuple of True and response of the Delete operation.
+        If the key was not deleted, returns tuple of False and response is None.
 
         :param key: key in etcd to delete
         :param prev_kv: return the deleted key-value pair
         :type prev_kv: bool
-        :param return_response: return the full response
-        :type return_response: bool
         :returns: True if the key has been deleted when
                   ``return_response`` is False and a response containing
                   a header, the number of deleted keys and prev_kvs when
                   ``return_response`` is True
         """
-        delete_request = self._build_delete_request(key, prev_kv=prev_kv)
+        delete_request = build_delete_request(key, prev_kv=prev_kv)
         delete_response = self.kvstub.DeleteRange(
             delete_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
-        if return_response:
-            return delete_response
-        return delete_response.deleted >= 1
+
+        if delete_response.deleted >= 1:
+            return True, delete_response
+
+        return False, None
 
     @_handle_errors
-    def delete_prefix(self, prefix):
+    def delete_prefix(
+        self, prefix: Union[str, bytes], prev_kv: bool = False
+    ) -> etcdrpc.DeleteRangeResponse:
         """Delete a range of keys with a prefix in etcd."""
-        delete_request = self._build_delete_request(
-            prefix,
-            range_end=utils.increment_last_byte(utils.to_bytes(prefix))
+        delete_request = build_delete_request(
+            prefix, range_end=range_end_for_key(prefix), prev_kv=prev_kv
         )
+
         return self.kvstub.DeleteRange(
             delete_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @_handle_errors
-    def status(self):
+    def delete_range(
+        self,
+        key: Union[str, bytes],
+        range_end: Union[str, bytes],
+        prev_kv: bool = False,
+    ) -> etcdrpc.DeleteRangeResponse:
+        """Delete a range of keys with a prefix in etcd."""
+        delete_request = build_delete_request(key, range_end=range_end, prev_kv=prev_kv)
+
+        return self.kvstub.DeleteRange(
+            delete_request,
+            self.timeout,
+            credentials=self.call_credentials,
+            metadata=self.metadata,
+        )
+
+    @_handle_errors
+    def status(self) -> Status:
         """Get the status of the responding member."""
         status_request = etcdrpc.StatusRequest()
         status_response = self.maintenancestub.Status(
             status_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         for m in self.members:
@@ -543,17 +646,27 @@ class Etcd3Client(object):
                 leader = m
                 break
         else:
-            # raise exception?
             leader = None
 
-        return Status(status_response.version,
-                      status_response.dbSize,
-                      leader,
-                      status_response.raftIndex,
-                      status_response.raftTerm)
+        return Status(
+            status_response.version,
+            status_response.dbSize,
+            leader,
+            status_response.raftIndex,
+            status_response.raftTerm,
+        )
 
     @_handle_errors
-    def add_watch_callback(self, *args, **kwargs):
+    def add_watch_callback(
+        self,
+        key: Union[str, bytes],
+        callback: WatchCallback,
+        range_end: Optional[Union[str, bytes]] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> int:
         """
         Watch a key or range of keys and call a callback on every response.
 
@@ -563,16 +676,41 @@ class Etcd3Client(object):
 
         :param key: key to watch
         :param callback: callback function
-
+        :param range_end: end of key range if watching multiple keys
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
         :returns: watch_id. Later it could be used for cancelling watch.
         """
         try:
-            return self.watcher.add_callback(*args, **kwargs)
+            return self.watcher.add_callback(
+                key=key,
+                callback=callback,
+                range_end=range_end,
+                start_revision=start_revision,
+                progress_notify=progress_notify,
+                filters=filters,
+                prev_kv=prev_kv,
+            )
         except queue.Empty:
-            raise exceptions.WatchTimedOut()
+            raise WatchTimedOut()
 
     @_handle_errors
-    def add_watch_prefix_callback(self, key_prefix, callback, **kwargs):
+    def add_watch_prefix_callback(
+        self,
+        key_prefix: Union[str, bytes],
+        callback: WatchCallback,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> int:
         """
         Watch a prefix and call a callback on every response.
 
@@ -582,16 +720,39 @@ class Etcd3Client(object):
 
         :param key_prefix: prefix to watch
         :param callback: callback function
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: watch_id. Later it could be used for cancelling watch.
         """
-        kwargs['range_end'] = \
-            utils.increment_last_byte(utils.to_bytes(key_prefix))
 
-        return self.add_watch_callback(key_prefix, callback, **kwargs)
+        return self.add_watch_callback(
+            key_prefix,
+            callback,
+            range_end=range_end_for_key(key_prefix),
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
 
     @_handle_errors
-    def watch_response(self, key, **kwargs):
+    def watch_response(
+        self,
+        key: Union[str, bytes],
+        range_end: Optional[Union[str, bytes]] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> Tuple[Iterator[WatchResponse], Callable[[], Any]]:
         """
         Watch a key.
 
@@ -603,40 +764,66 @@ class Etcd3Client(object):
                 print(response)
 
         :param key: key to watch
+        :param range_end: end of key range if watching multiple keys
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: tuple of ``responses_iterator`` and ``cancel``.
                   Use ``responses_iterator`` to get the watch responses,
                   each of which contains a header and a list of events.
                   Use ``cancel`` to cancel the watch request.
         """
-        response_queue = queue.Queue()
+        response_queue: queue.Queue[
+            Union[Exception, WatchResponse, None]
+        ] = queue.Queue()
 
-        def callback(response):
-            response_queue.put(response)
-
-        watch_id = self.add_watch_callback(key, callback, **kwargs)
+        watch_id = self.add_watch_callback(
+            key,
+            response_queue.put,
+            range_end=range_end,
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
         canceled = threading.Event()
 
-        def cancel():
+        def cancel() -> None:
             canceled.set()
             response_queue.put(None)
             self.cancel_watch(watch_id)
 
         @_handle_errors
-        def iterator():
+        def iterator() -> Iterator[WatchResponse]:
             while not canceled.is_set():
                 response = response_queue.get()
+
                 if response is None:
                     canceled.set()
-                if isinstance(response, Exception):
+                elif isinstance(response, Exception):
                     canceled.set()
                     raise response
-                if not canceled.is_set():
+                elif not canceled.is_set():
                     yield response
 
         return iterator(), cancel
 
-    def watch(self, key, **kwargs):
+    def watch(
+        self,
+        key: Union[str, bytes],
+        range_end: Optional[Union[str, bytes]] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> Tuple[Iterator[Event], Callable[[], Any]]:
         """
         Watch a key.
 
@@ -648,40 +835,118 @@ class Etcd3Client(object):
                 print(event)
 
         :param key: key to watch
+        :param range_end: end of key range if watching multiple keys
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: tuple of ``events_iterator`` and ``cancel``.
                   Use ``events_iterator`` to get the events of key changes
                   and ``cancel`` to cancel the watch request.
         """
-        response_iterator, cancel = self.watch_response(key, **kwargs)
-        return utils.response_to_event_iterator(response_iterator), cancel
+        response_iterator, cancel = self.watch_response(
+            key,
+            range_end=range_end,
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
 
-    def watch_prefix_response(self, key_prefix, **kwargs):
+        def _to_event_iterator(
+            iterator: Iterator[WatchResponse],
+        ) -> Iterator[Event]:
+            for response in iterator:
+                for event in response.events:
+                    yield event
+
+        return _to_event_iterator(response_iterator), cancel
+
+    def watch_prefix_response(
+        self,
+        key_prefix: Union[str, bytes],
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> Tuple[Iterator[WatchResponse], Callable[[], Any]]:
         """
         Watch a range of keys with a prefix.
 
         :param key_prefix: prefix to watch
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: tuple of ``responses_iterator`` and ``cancel``.
         """
-        kwargs['range_end'] = \
-            utils.increment_last_byte(utils.to_bytes(key_prefix))
-        return self.watch_response(key_prefix, **kwargs)
 
-    def watch_prefix(self, key_prefix, **kwargs):
+        return self.watch_response(
+            key_prefix,
+            range_end=range_end_for_key(key_prefix),
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
+
+    def watch_prefix(
+        self,
+        key_prefix: Union[str, bytes],
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> Tuple[Iterator[Event], Callable[[], Any]]:
         """
         Watch a range of keys with a prefix.
 
         :param key_prefix: prefix to watch
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: tuple of ``events_iterator`` and ``cancel``.
         """
-        kwargs['range_end'] = \
-            utils.increment_last_byte(utils.to_bytes(key_prefix))
-        return self.watch(key_prefix, **kwargs)
+
+        return self.watch(
+            key_prefix,
+            range_end=range_end_for_key(key_prefix),
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
 
     @_handle_errors
-    def watch_once_response(self, key, timeout=None, **kwargs):
+    def watch_once_response(
+        self,
+        key: Union[str, bytes],
+        timeout: Optional[float] = None,
+        range_end: Optional[Union[str, bytes]] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> WatchResponse:
         """
         Watch a key and stop after the first response.
 
@@ -690,62 +955,141 @@ class Etcd3Client(object):
 
         :param key: key to watch
         :param timeout: (optional) timeout in seconds.
+        :param range_end: end of key range if watching multiple keys
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: ``WatchResponse``
         """
-        response_queue = queue.Queue()
-
-        def callback(response):
-            response_queue.put(response)
-
-        watch_id = self.add_watch_callback(key, callback, **kwargs)
+        response_queue: queue.Queue[Union[Exception, WatchResponse]] = queue.Queue()
+        watch_id = self.add_watch_callback(
+            key,
+            response_queue.put,
+            range_end=range_end,
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
 
         try:
-            return response_queue.get(timeout=timeout)
+            res = response_queue.get(timeout=timeout)
+
+            if isinstance(res, Exception):
+                raise Exception
+
+            return res
         except queue.Empty:
-            raise exceptions.WatchTimedOut()
+            raise WatchTimedOut()
         finally:
             self.cancel_watch(watch_id)
 
-    def watch_once(self, key, timeout=None, **kwargs):
+    def watch_once(
+        self,
+        key: Union[str, bytes],
+        timeout: Optional[float] = None,
+        range_end: Optional[Union[str, bytes]] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> List[Event]:
         """
-        Watch a key and stop after the first event.
+        Watch a key and stop after the first batch of events.
 
         If the timeout was specified and event didn't arrive method
         will raise ``WatchTimedOut`` exception.
 
+        BREAKING: in 0.12.0, this was returning first event of possibly multiple events that describe
+        a transaction done on watched keys. It now returns a list of events.
+
         :param key: key to watch
         :param timeout: (optional) timeout in seconds.
+        :param range_end: end of key range if watching multiple keys
+        :param start_revision: An optional revision for where to inclusively begin watching. If not given, it will
+         stream events following the revision of the watch creation response header revision. The entire available
+         event history can be watched starting from the last compaction revision.
+        :param progress_notify: When set, the watch will periodically receive a WatchResponse with no events, if there
+         are no recent events. It is useful when clients wish to recover a disconnected watcher starting from a recent
+         known revision. The etcd server decides how often to send notifications based on current server load.
+        :param filters: A list of event types to filter away at server side.
+        :param prev_kv: When set, the watch receives the key-value data from before the event happens. This is useful
+         for knowing what data has been overwritten.
 
         :returns: ``Event``
         """
-        response = self.watch_once_response(key, timeout=timeout, **kwargs)
-        return response.events[0]
+        response = self.watch_once_response(
+            key,
+            timeout=timeout,
+            range_end=range_end,
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
 
-    def watch_prefix_once_response(self, key_prefix, timeout=None, **kwargs):
+        return response.events
+
+    def watch_prefix_once_response(
+        self,
+        key_prefix: Union[str, bytes],
+        timeout: Optional[float] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> WatchResponse:
         """
         Watch a range of keys with a prefix and stop after the first response.
 
         If the timeout was specified and response didn't arrive method
         will raise ``WatchTimedOut`` exception.
         """
-        kwargs['range_end'] = \
-            utils.increment_last_byte(utils.to_bytes(key_prefix))
-        return self.watch_once_response(key_prefix, timeout=timeout, **kwargs)
 
-    def watch_prefix_once(self, key_prefix, timeout=None, **kwargs):
+        return self.watch_once_response(
+            key_prefix,
+            timeout=timeout,
+            range_end=range_end_for_key(key_prefix),
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
+
+    def watch_prefix_once(
+        self,
+        key_prefix: Union[str, bytes],
+        timeout: Optional[float] = None,
+        start_revision: Optional[int] = None,
+        progress_notify: bool = False,
+        filters: Optional[Iterable[WatchFilterType]] = None,
+        prev_kv: bool = False,
+    ) -> List[Event]:
         """
         Watch a range of keys with a prefix and stop after the first event.
 
         If the timeout was specified and event didn't arrive method
         will raise ``WatchTimedOut`` exception.
         """
-        kwargs['range_end'] = \
-            utils.increment_last_byte(utils.to_bytes(key_prefix))
-        return self.watch_once(key_prefix, timeout=timeout, **kwargs)
+        return self.watch_once(
+            key_prefix,
+            timeout=timeout,
+            range_end=range_end_for_key(key_prefix),
+            start_revision=start_revision,
+            progress_notify=progress_notify,
+            filters=filters,
+            prev_kv=prev_kv,
+        )
 
     @_handle_errors
-    def cancel_watch(self, watch_id):
+    def cancel_watch(self, watch_id: int) -> None:
         """
         Stop watching a key or range of keys.
 
@@ -753,49 +1097,13 @@ class Etcd3Client(object):
         """
         self.watcher.cancel(watch_id)
 
-    def _ops_to_requests(self, ops):
-        """
-        Return a list of grpc requests.
-
-        Returns list from an input list of etcd3.transactions.{Put, Get,
-        Delete, Txn} objects.
-        """
-        request_ops = []
-        for op in ops:
-            if isinstance(op, transactions.Put):
-                request = self._build_put_request(op.key, op.value,
-                                                  op.lease, op.prev_kv)
-                request_op = etcdrpc.RequestOp(request_put=request)
-                request_ops.append(request_op)
-
-            elif isinstance(op, transactions.Get):
-                request = self._build_get_range_request(op.key, op.range_end)
-                request_op = etcdrpc.RequestOp(request_range=request)
-                request_ops.append(request_op)
-
-            elif isinstance(op, transactions.Delete):
-                request = self._build_delete_request(op.key, op.range_end,
-                                                     op.prev_kv)
-                request_op = etcdrpc.RequestOp(request_delete_range=request)
-                request_ops.append(request_op)
-
-            elif isinstance(op, transactions.Txn):
-                compare = [c.build_message() for c in op.compare]
-                success_ops = self._ops_to_requests(op.success)
-                failure_ops = self._ops_to_requests(op.failure)
-                request = etcdrpc.TxnRequest(compare=compare,
-                                             success=success_ops,
-                                             failure=failure_ops)
-                request_op = etcdrpc.RequestOp(request_txn=request)
-                request_ops.append(request_op)
-
-            else:
-                raise Exception(
-                    'Unknown request class {}'.format(op.__class__))
-        return request_ops
-
     @_handle_errors
-    def transaction(self, compare, success=None, failure=None):
+    def transaction(
+        self,
+        compare: Iterable[TxCondition],
+        success: Optional[Iterable[TxOp]] = None,
+        failure: Optional[Iterable[TxOp]] = None,
+    ) -> TxResult:
         """
         Perform a transaction.
 
@@ -823,40 +1131,39 @@ class Etcd3Client(object):
                         comparisons are false
         :return: A tuple of (operation status, responses)
         """
-        compare = [c.build_message() for c in compare]
 
-        success_ops = self._ops_to_requests(success)
-        failure_ops = self._ops_to_requests(failure)
+        transaction_request = build_tx_request(compare, success, failure)
 
-        transaction_request = etcdrpc.TxnRequest(compare=compare,
-                                                 success=success_ops,
-                                                 failure=failure_ops)
         txn_response = self.kvstub.Txn(
             transaction_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         responses = []
         for response in txn_response.responses:
-            response_type = response.WhichOneof('response')
-            if response_type in ['response_put', 'response_delete_range',
-                                 'response_txn']:
+            response_type = response.WhichOneof("response")
+            if response_type in [
+                "response_put",
+                "response_delete_range",
+                "response_txn",
+            ]:
                 responses.append(response)
 
-            elif response_type == 'response_range':
+            elif response_type == "response_range":
                 range_kvs = []
                 for kv in response.response_range.kvs:
-                    range_kvs.append((kv.value,
-                                      KVMetadata(kv, txn_response.header)))
+                    range_kvs.append(
+                        (kv.value, KVMetadata.create(kv, txn_response.header))
+                    )
 
                 responses.append(range_kvs)
 
         return txn_response.succeeded, responses
 
     @_handle_errors
-    def lease(self, ttl, lease_id=None):
+    def lease(self, ttl: int, lease_id: Optional[int] = None) -> Lease:
         """
         Create a new lease.
 
@@ -870,19 +1177,23 @@ class Etcd3Client(object):
         :returns: new lease
         :rtype: :class:`.Lease`
         """
-        lease_grant_request = etcdrpc.LeaseGrantRequest(TTL=ttl, ID=lease_id)
+        lease_grant_request = etcdrpc.LeaseGrantRequest(TTL=ttl, ID=lease_id or 0)
         lease_grant_response = self.leasestub.LeaseGrant(
             lease_grant_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
-        return leases.Lease(lease_id=lease_grant_response.ID,
-                            ttl=lease_grant_response.TTL,
-                            etcd_client=self)
+        return Lease(
+            lease_id=lease_grant_response.ID,
+            ttl=lease_grant_response.TTL,
+            get_lease_info=self.get_lease_info,
+            revoke_lease=self.revoke_lease,
+            refresh_lease=self.refresh_lease,
+        )
 
     @_handle_errors
-    def revoke_lease(self, lease_id):
+    def revoke_lease(self, lease_id: int) -> None:
         """
         Revoke a lease.
 
@@ -893,89 +1204,91 @@ class Etcd3Client(object):
             lease_revoke_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @_handle_errors
-    def refresh_lease(self, lease_id):
+    def refresh_lease(
+        self, lease_id: int
+    ) -> Generator[etcdrpc.LeaseKeepAliveResponse, None, None]:
+        """
+        Refreshes the lease. This returns a generator that will yield exactly once and will provide the
+        response to the refresh request.
+
+        Note: if the refresh failed, the TTL field of the response will be 0.
+
+        :param lease_id: lease id to refresh
+        :return: generator that yields one refresh response and then ends
+        """
         keep_alive_request = etcdrpc.LeaseKeepAliveRequest(ID=lease_id)
         request_stream = [keep_alive_request]
+
         for response in self.leasestub.LeaseKeepAlive(
-                iter(request_stream),
-                self.timeout,
-                credentials=self.call_credentials,
-                metadata=self.metadata):
+            iter(request_stream),
+            self.timeout,
+            credentials=self.call_credentials,
+            metadata=self.metadata,
+        ):
             yield response
 
     @_handle_errors
-    def get_lease_info(self, lease_id):
+    def get_lease_info(
+        self, lease_id: int, keys: bool = True
+    ) -> etcdrpc.LeaseTimeToLiveResponse:
         # only available in etcd v3.1.0 and later
-        ttl_request = etcdrpc.LeaseTimeToLiveRequest(ID=lease_id,
-                                                     keys=True)
+        ttl_request = etcdrpc.LeaseTimeToLiveRequest(ID=lease_id, keys=keys)
+
         return self.leasestub.LeaseTimeToLive(
             ttl_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @_handle_errors
-    def lock(self, name, ttl=60):
-        """
-        Create a new lock.
-
-        :param name: name of the lock
-        :type name: string or bytes
-        :param ttl: length of time for the lock to live for in seconds. The
-                    lock will be released after this time elapses, unless
-                    refreshed
-        :type ttl: int
-        :returns: new lock
-        :rtype: :class:`.Lock`
-        """
-        return locks.Lock(name, ttl=ttl, etcd_client=self)
-
-    @_handle_errors
-    def add_member(self, urls):
+    def add_member(self, urls: Iterable[str]) -> Member:
         """
         Add a member into the cluster.
 
         :returns: new member
         :rtype: :class:`.Member`
         """
-        member_add_request = etcdrpc.MemberAddRequest(peerURLs=urls)
+        member_add_request = etcdrpc.MemberAddRequest(peerURLs=list(urls))
 
-        member_add_response = self.clusterstub.MemberAdd(
+        member_add_response: etcdrpc.MemberAddResponse = self.clusterstub.MemberAdd(
             member_add_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         member = member_add_response.member
-        return etcd3.members.Member(member.ID,
-                                    member.name,
-                                    member.peerURLs,
-                                    member.clientURLs,
-                                    etcd_client=self)
+
+        return Member(
+            id=member.ID,
+            name=member.name,
+            peer_urls=list(member.peerURLs),
+            client_urls=list(member.clientURLs),
+        )
 
     @_handle_errors
-    def remove_member(self, member_id):
+    def remove_member(self, member_id: int) -> None:
         """
         Remove an existing member from the cluster.
 
         :param member_id: ID of the member to remove
         """
         member_rm_request = etcdrpc.MemberRemoveRequest(ID=member_id)
+
         self.clusterstub.MemberRemove(
             member_rm_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @_handle_errors
-    def update_member(self, member_id, peer_urls):
+    def update_member(self, member_id: int, peer_urls: Iterable[str]) -> None:
         """
         Update the configuration of an existing member in the cluster.
 
@@ -983,17 +1296,19 @@ class Etcd3Client(object):
         :param peer_urls: new list of peer urls the member will use to
                           communicate with the cluster
         """
-        member_update_request = etcdrpc.MemberUpdateRequest(ID=member_id,
-                                                            peerURLs=peer_urls)
+        member_update_request = etcdrpc.MemberUpdateRequest(
+            ID=member_id, peerURLs=list(peer_urls)
+        )
+
         self.clusterstub.MemberUpdate(
             member_update_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @property
-    def members(self):
+    def members(self) -> Generator[Member, None, None]:
         """
         List of all members associated with the cluster.
 
@@ -1001,22 +1316,23 @@ class Etcd3Client(object):
 
         """
         member_list_request = etcdrpc.MemberListRequest()
-        member_list_response = self.clusterstub.MemberList(
+        member_list_response: etcdrpc.MemberListResponse = self.clusterstub.MemberList(
             member_list_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         for member in member_list_response.members:
-            yield etcd3.members.Member(member.ID,
-                                       member.name,
-                                       member.peerURLs,
-                                       member.clientURLs,
-                                       etcd_client=self)
+            yield Member(
+                id=member.ID,
+                name=member.name,
+                peer_urls=list(member.peerURLs),
+                client_urls=list(member.clientURLs),
+            )
 
     @_handle_errors
-    def compact(self, revision, physical=False):
+    def compact(self, revision: int, physical: bool = False) -> None:
         """
         Compact the event history in etcd up to a given revision.
 
@@ -1029,28 +1345,30 @@ class Etcd3Client(object):
                          such that compacted entries are totally removed from
                          the backend database
         """
-        compact_request = etcdrpc.CompactionRequest(revision=revision,
-                                                    physical=physical)
+        compact_request = etcdrpc.CompactionRequest(
+            revision=revision, physical=physical
+        )
         self.kvstub.Compact(
             compact_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @_handle_errors
-    def defragment(self):
+    def defragment(self) -> etcdrpc.DefragmentResponse:
         """Defragment a member's backend database to recover storage space."""
         defrag_request = etcdrpc.DefragmentRequest()
-        self.maintenancestub.Defragment(
+
+        return self.maintenancestub.Defragment(
             defrag_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
     @_handle_errors
-    def hash(self):
+    def hash(self) -> int:
         """
         Return the hash of the local KV state.
 
@@ -1060,31 +1378,10 @@ class Etcd3Client(object):
         hash_request = etcdrpc.HashRequest()
         return self.maintenancestub.Hash(hash_request).hash
 
-    def _build_alarm_request(self, alarm_action, member_id, alarm_type):
-        alarm_request = etcdrpc.AlarmRequest()
-
-        if alarm_action == 'get':
-            alarm_request.action = etcdrpc.AlarmRequest.GET
-        elif alarm_action == 'activate':
-            alarm_request.action = etcdrpc.AlarmRequest.ACTIVATE
-        elif alarm_action == 'deactivate':
-            alarm_request.action = etcdrpc.AlarmRequest.DEACTIVATE
-        else:
-            raise ValueError('Unknown alarm action: {}'.format(alarm_action))
-
-        alarm_request.memberID = member_id
-
-        if alarm_type == 'none':
-            alarm_request.alarm = etcdrpc.NONE
-        elif alarm_type == 'no space':
-            alarm_request.alarm = etcdrpc.NOSPACE
-        else:
-            raise ValueError('Unknown alarm type: {}'.format(alarm_type))
-
-        return alarm_request
-
     @_handle_errors
-    def create_alarm(self, member_id=0):
+    def create_alarm(
+        self, member_id: int = 0, alarm_type: AlarmType = "no space"
+    ) -> List[Alarm]:
         """Create an alarm.
 
         If no member id is given, the alarm is activated for all the
@@ -1093,68 +1390,79 @@ class Etcd3Client(object):
         :param member_id: The cluster member id to create an alarm to.
                           If 0, the alarm is created for all the members
                           of the cluster.
+        :param alarm_type: type of alarm to create
         :returns: list of :class:`.Alarm`
         """
-        alarm_request = self._build_alarm_request('activate',
-                                                  member_id,
-                                                  'no space')
-        alarm_response = self.maintenancestub.Alarm(
-            alarm_request,
-            self.timeout,
-            credentials=self.call_credentials,
-            metadata=self.metadata
+        alarm_request = build_alarm_request(
+            alarm_action=etcdrpc.AlarmRequest.ACTIVATE,
+            member_id=member_id,
+            alarm_type=alarm_type,
         )
 
-        return [Alarm(alarm.alarm, alarm.memberID)
-                for alarm in alarm_response.alarms]
+        alarm_response: etcdrpc.AlarmResponse = self.maintenancestub.Alarm(
+            alarm_request,
+            self.timeout,
+            credentials=self.call_credentials,
+            metadata=self.metadata,
+        )
+
+        return [Alarm(alarm.alarm, alarm.memberID) for alarm in alarm_response.alarms]
 
     @_handle_errors
-    def list_alarms(self, member_id=0, alarm_type='none'):
+    def list_alarms(
+        self, member_id: int = 0, alarm_type: AlarmType = "none"
+    ) -> Generator[Alarm, None, None]:
         """List the activated alarms.
 
-        :param member_id:
-        :param alarm_type: The cluster member id to create an alarm to.
+        :param member_id: The cluster member id to create an alarm to.
                            If 0, the alarm is created for all the members
                            of the cluster.
+        :param alarm_type: type of alarm to list
         :returns: sequence of :class:`.Alarm`
         """
-        alarm_request = self._build_alarm_request('get',
-                                                  member_id,
-                                                  alarm_type)
+        alarm_request = build_alarm_request(
+            alarm_action=etcdrpc.AlarmRequest.GET,
+            member_id=member_id,
+            alarm_type=alarm_type,
+        )
         alarm_response = self.maintenancestub.Alarm(
             alarm_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         for alarm in alarm_response.alarms:
             yield Alarm(alarm.alarm, alarm.memberID)
 
     @_handle_errors
-    def disarm_alarm(self, member_id=0):
+    def disarm_alarm(
+        self, member_id: int = 0, alarm_type: AlarmType = "no space"
+    ) -> List[Alarm]:
         """Cancel an alarm.
 
         :param member_id: The cluster member id to cancel an alarm.
                           If 0, the alarm is canceled for all the members
                           of the cluster.
+        :param alarm_type: type of alarm to disarm
         :returns: List of :class:`.Alarm`
         """
-        alarm_request = self._build_alarm_request('deactivate',
-                                                  member_id,
-                                                  'no space')
+        alarm_request = build_alarm_request(
+            alarm_action=etcdrpc.AlarmRequest.DEACTIVATE,
+            member_id=member_id,
+            alarm_type=alarm_type,
+        )
         alarm_response = self.maintenancestub.Alarm(
             alarm_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-        return [Alarm(alarm.alarm, alarm.memberID)
-                for alarm in alarm_response.alarms]
+        return [Alarm(alarm.alarm, alarm.memberID) for alarm in alarm_response.alarms]
 
     @_handle_errors
-    def snapshot(self, file_obj):
+    def snapshot(self, file_obj: BinaryIO) -> None:
         """Take a snapshot of the database.
 
         :param file_obj: A file-like object to write the database contents in.
@@ -1164,23 +1472,33 @@ class Etcd3Client(object):
             snapshot_request,
             self.timeout,
             credentials=self.call_credentials,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
         for response in snapshot_response:
             file_obj.write(response.blob)
 
 
-def client(host='localhost', port=2379,
-           ca_cert=None, cert_key=None, cert_cert=None, timeout=None,
-           user=None, password=None, grpc_options=None):
+def client(
+    host: str = "localhost",
+    port: int = 2379,
+    ca_cert: Optional[str] = None,
+    cert_key: Optional[str] = None,
+    cert_cert: Optional[str] = None,
+    timeout: Optional[int | float] = None,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
+    grpc_options: Optional[List[Tuple[str, Any]]] = None,
+) -> Etcd3Client:
     """Return an instance of an Etcd3Client."""
-    return Etcd3Client(host=host,
-                       port=port,
-                       ca_cert=ca_cert,
-                       cert_key=cert_key,
-                       cert_cert=cert_cert,
-                       timeout=timeout,
-                       user=user,
-                       password=password,
-                       grpc_options=grpc_options)
+    return Etcd3Client(
+        host=host,
+        port=port,
+        ca_cert=ca_cert,
+        cert_key=cert_key,
+        cert_cert=cert_cert,
+        timeout=timeout,
+        user=user,
+        password=password,
+        grpc_options=grpc_options,
+    )

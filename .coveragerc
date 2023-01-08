@@ -1,0 +1,4 @@
+[run]
+
+omit = etcd3/rpc/*
+		tests/*

@@ -1,41 +1,147 @@
-class Event(object):
+import etcd3.rpc as etcdrpc
+from etcd3.base import KVMetadata
 
-    def __init__(self, event):
-        self.key = event.kv.key
+
+class Event:
+    """
+    Base type for etcd event wrapper. The purpose of the wrapper is to provide additional convenience on top of
+    the raw events received via etcd watches.
+    """
+
+    __slots__ = ("_value", "_kv_meta", "_prev_value", "_prev_kv_meta", "_event")
+
+    def __init__(self, event: etcdrpc.Event, header: etcdrpc.ResponseHeader):
+        self._value = event.kv.value
+        self._kv_meta = KVMetadata.create(kv=event.kv, header=header)
+
+        self._prev_value = event.prev_kv.value
+        self._prev_kv_meta = KVMetadata.create(kv=event.prev_kv, header=header)
+
         self._event = event
 
-    def __getattr__(self, name):
-        if name.startswith('prev_'):
-            return getattr(self._event.prev_kv, name[5:])
-        return getattr(self._event.kv, name)
+    #
+    # getters for the 'core' stuff
+    #
 
-    def __str__(self):
-        return '{type} key={key} value={value}'.format(type=self.__class__,
-                                                       key=self.key,
-                                                       value=self.value)
+    @property
+    def key(self) -> bytes:
+        """
+        :return: key to which the event pertains
+        """
+        return self._kv_meta.key
+
+    @property
+    def value(self) -> bytes:
+        """
+        :return: value of the key (always b"" if delete event)
+        """
+        return self._value
+
+    @property
+    def kv_meta(self) -> KVMetadata:
+        """
+        :return: key-value metadata
+        """
+        return self._kv_meta
+
+    @property
+    def prev_value(self) -> bytes:
+        """
+        :return: value of the previous version of the key (in delete events, this is the value that got deleted)
+        """
+        return self._prev_value
+
+    @property
+    def prev_kv_meta(self) -> KVMetadata:
+        """
+        :return: key-value metadata for the previous version of the key
+        """
+        return self._prev_kv_meta
+
+    @property
+    def event(self) -> etcdrpc.Event:
+        """
+        :return: the raw event received from etcd
+        """
+        return self._event
+
+    @property
+    def header(self) -> etcdrpc.ResponseHeader:
+        """
+        :return: response header of the watch response that included this event
+        """
+        return self._kv_meta.response_header
+
+    #
+    # convenience, delegates, things to keep backward compatibility
+    #
+
+    @property
+    def create_revision(self) -> int:
+        return self._kv_meta.create_revision
+
+    @property
+    def mod_revision(self) -> int:
+        return self._kv_meta.mod_revision
+
+    @property
+    def version(self) -> int:
+        return self._kv_meta.version
+
+    @property
+    def lease(self) -> int:
+        return self._kv_meta.lease_id
+
+    @property
+    def prev_key(self) -> bytes:
+        return self._prev_kv_meta.key
+
+    @property
+    def prev_create_revision(self) -> int:
+        return self._prev_kv_meta.create_revision
+
+    @property
+    def prev_mod_revision(self) -> int:
+        return self._prev_kv_meta.mod_revision
+
+    @property
+    def prev_version(self) -> int:
+        return self._prev_kv_meta.version
+
+    @property
+    def prev_lease(self) -> int:
+        return self._prev_kv_meta.lease_id
+
+    @staticmethod
+    def create_event(event: etcdrpc.Event, header: etcdrpc.ResponseHeader) -> "Event":
+        """
+        Creates concrete subtype of the event
+        :param event:
+        :param header:
+        :return:
+        """
+        if event.type == etcdrpc.Event.PUT:
+            return PutEvent(event=event, header=header)
+        elif event.type == etcdrpc.Event.DELETE:
+            return DeleteEvent(event=event, header=header)
+        else:
+            raise AssertionError("Unexpected event type")
+
+    def __str__(self) -> str:
+        return f"{self.__class__} key={self.key!r} value={self.value!r}"
 
 
 class PutEvent(Event):
-    pass
+    """
+    This event is emitted when a PUT is done on some key in etcd.
+    """
+
+    __slots__ = ()
 
 
 class DeleteEvent(Event):
-    pass
-
-
-def new_event(event):
     """
-    Wrap a raw gRPC event in a friendlier containing class.
-
-    This picks the appropriate class from one of PutEvent or DeleteEvent and
-    returns a new instance.
+    This event is emitted when some key in etcd is DELETED.
     """
-    op_name = event.EventType.DESCRIPTOR.values_by_number[event.type].name
-    if op_name == 'PUT':
-        cls = PutEvent
-    elif op_name == 'DELETE':
-        cls = DeleteEvent
-    else:
-        raise Exception('Invalid op_name')
 
-    return cls(event)
+    __slots__ = ()

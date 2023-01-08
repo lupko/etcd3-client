@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  etcd-test1:
+    image: quay.io/coreos/etcd:v3.5.6
+    hostname: etcd-test1
+    ports:
+      - "12379:2379"
+    command:
+      - etcd
+      - --name=etcd-test1
+      - --data-dir=data.etcd
+      - --advertise-client-urls=http://etcd-test1:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --initial-advertise-peer-urls=http://etcd-test1:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-cluster=etcd-test1=http://etcd-test1:2380,etcd-test2=http://etcd-test2:2380,etcd-test3=http://etcd-test3:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=quiver-etcd-cluster
+    volumes:
+      - etcd-test1-vol:/data.etcd
+    networks:
+      - etcd-test-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "5"
+    restart: always
+
+  etcd-test2:
+    image: quay.io/coreos/etcd:v3.5.6
+    hostname: etcd-test2
+    ports:
+      - "12380:2379"
+    command:
+      - etcd
+      - --name=etcd-test2
+      - --data-dir=data.etcd
+      - --advertise-client-urls=http://etcd-test2:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --initial-advertise-peer-urls=http://etcd-test2:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-cluster=etcd-test1=http://etcd-test1:2380,etcd-test2=http://etcd-test2:2380,etcd-test3=http://etcd-test3:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=quiver-etcd-cluster
+    volumes:
+      - etcd-test2-vol:/data.etcd
+    networks:
+      - etcd-test-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "5"
+    restart: always
+
+  etcd-test3:
+    image: quay.io/coreos/etcd:v3.5.6
+    hostname: etcd-test3
+    ports:
+      - "12381:2379"
+    command:
+      - etcd
+      - --name=etcd-test3
+      - --data-dir=data.etcd
+      - --advertise-client-urls=http://etcd-test3:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --initial-advertise-peer-urls=http://etcd-test3:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-cluster=etcd-test1=http://etcd-test1:2380,etcd-test2=http://etcd-test2:2380,etcd-test3=http://etcd-test3:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=quiver-etcd-cluster
+    volumes:
+      - etcd-test3-vol:/data.etcd
+    networks:
+      - etcd-test-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "5"
+    restart: always
+
+volumes:
+  etcd-test1-vol:
+    driver: local
+  etcd-test2-vol:
+    driver: local
+  etcd-test3-vol:
+    driver: local
+
+networks:
+  etcd-test-net:
+    driver: bridge
