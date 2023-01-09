@@ -10,6 +10,16 @@ to the original package.
 
 ## Changelog
 
+### 0.91.0
+
+- API Improvements - running transactions
+  - Added new API to run transactions. The `txn()` method can be used to run transactions specified using `TransactionBuilder`
+  - The `TransactionBuilder` provides fluent APIs through which code can incrementally build the transaction - specify
+    compares, success and failure operations as necessary
+  - The `TransactionResponse` is returned by the `txn()`. This is a facade that allows for a type-safe way to access
+    responses for particular operations
+
+
 ### Initial version
 
 - BREAKING changes

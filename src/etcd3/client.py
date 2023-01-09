@@ -19,11 +19,9 @@ from typing import (
 
 import grpc
 import grpc._channel
-from typing_extensions import TypeAlias
 
 import etcd3.rpc as etcdrpc
-from etcd3 import Alarm, KVMetadata, Status
-from etcd3.base import KVResult, Member
+from etcd3.base import Alarm, KVMetadata, KVResult, Member, Status, TxResponse, TxResult
 from etcd3.events import Event
 from etcd3.exceptions import (
     ConnectionFailedError,
@@ -45,6 +43,7 @@ from etcd3.request_factory import (
     build_tx_request,
 )
 from etcd3.transactions import Transactions, TxCondition, TxOp
+from etcd3.transactions2 import TransactionBuilder, TransactionResponse
 from etcd3.utils import get_secure_creds, range_end_for_key
 from etcd3.watch import WatchCallback, Watcher, WatchResponse
 
@@ -98,11 +97,6 @@ def _handle_errors(f: FuncT) -> FuncT:
                 _translate_exception(exc)
 
     return cast(FuncT, handler)
-
-
-TxResponse: TypeAlias = Union[etcdrpc.ResponseOp, List[KVResult]]
-TxResponses: TypeAlias = List[TxResponse]
-TxResult: TypeAlias = Tuple[bool, TxResponses]
 
 
 class _EtcdTokenCallCredentials(grpc.AuthMetadataPlugin):
@@ -1134,14 +1128,14 @@ class Etcd3Client:
 
         transaction_request = build_tx_request(compare, success, failure)
 
-        txn_response = self.kvstub.Txn(
+        txn_response: etcdrpc.TxnResponse = self.kvstub.Txn(
             transaction_request,
             self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
-        responses = []
+        responses: List[TxResponse] = []
         for response in txn_response.responses:
             response_type = response.WhichOneof("response")
             if response_type in [
@@ -1161,6 +1155,30 @@ class Etcd3Client:
                 responses.append(range_kvs)
 
         return txn_response.succeeded, responses
+
+    @_handle_errors
+    def txn(self, tx: TransactionBuilder) -> TransactionResponse:
+        """
+        Perform a transaction as defined in the `TransactionBuilder`.
+
+        The TransactionBuilder is a convenience that helps you build the lists that contain compares, success and
+        failure operations. It has fluent API and can possibly for in cumulative (immutable) fashion.
+
+        The response is wrapped in the `TransactionResponse` facade that allows for convenient and
+        typed access to the results.
+
+        :param tx: transaction builder
+        :return: transaction response
+        """
+        request = tx.request
+        response: etcdrpc.TxnResponse = self.kvstub.Txn(
+            request,
+            self.timeout,
+            credentials=self.call_credentials,
+            metadata=self.metadata,
+        )
+
+        return TransactionResponse(response)
 
     @_handle_errors
     def lease(self, ttl: int, lease_id: Optional[int] = None) -> Lease:

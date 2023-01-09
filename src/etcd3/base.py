@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from typing_extensions import TypeAlias
 
@@ -96,10 +96,6 @@ class KVMetadata:
         )
 
 
-KVResult: TypeAlias = Tuple[bytes, KVMetadata]
-GetResult: TypeAlias = List[KVResult]
-
-
 @dataclass(frozen=True)
 class Member:
     """
@@ -148,3 +144,32 @@ class Alarm:
 
     member_id: int
     """member identifier; may be 0 if alarm set on all members"""
+
+
+KVResult: TypeAlias = Tuple[bytes, KVMetadata]
+"""
+KeyValue pairs from etcd are converted to this convenient form.
+"""
+
+GetResult: TypeAlias = List[KVResult]
+"""
+Result of get (range) operation is one or more KeyValue pairs.
+"""
+
+TxResponse: TypeAlias = Union[etcdrpc.ResponseOp, GetResult]
+"""
+Response to a single operation within transaction. Either 'raw' put, delete or txn operation response or for get
+a conveniently transformed KeyValues.
+"""
+
+TxResponses: TypeAlias = List[TxResponse]
+"""
+Transaction responses. This is a list of per-operation responses.
+"""
+
+TxResult: TypeAlias = Tuple[bool, TxResponses]
+"""
+Transaction result. First element indicates success vs failure. Second element is per-operation responses. If
+transaction was successful, then responses are for the 'success' operations. If transaction failed, then responses
+are for the 'failure' operations.
+"""
