@@ -1,8 +1,18 @@
 from typing import List, cast
 
 import etcd3.rpc as etcdrpc
-from etcd3.base import Alarm, GetResult, KVMetadata, KVResult, Member, Status
-from etcd3.client import Etcd3Client, TxResponse, TxResponses, TxResult, client
+from etcd3.base import (
+    Alarm,
+    GetResult,
+    KVMetadata,
+    KVResult,
+    Member,
+    Status,
+    TxResponse,
+    TxResponses,
+    TxResult,
+)
+from etcd3.client import Etcd3Client, client
 from etcd3.events import DeleteEvent, Event, PutEvent
 from etcd3.exceptions import (
     ConnectionFailedError,
@@ -28,6 +38,13 @@ from etcd3.transactions import (
     TxOp,
     Value,
     Version,
+)
+from etcd3.transactions2 import (
+    CompareBuilder,
+    CompareBuilderStep1,
+    OperationBuilder,
+    TransactionBuilder,
+    TransactionResponse,
 )
 from etcd3.utils import range_end_for_key
 from etcd3.watch import WatchCallback, WatchResponse
