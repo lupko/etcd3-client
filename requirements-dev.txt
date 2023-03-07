@@ -4,6 +4,7 @@ black==22.6.0
 pre-commit~=2.20.0
 isort==5.10.1
 mypy==0.991
+wheel
 
 pytest~=7.2.0
 pytest-docker~=0.12.0
