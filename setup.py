@@ -10,7 +10,7 @@ setup(
     version="0.90.0",
     description="Python client for the etcd3",
     long_description="",
-    url="https://github.com/gooddata/etcd3-client",
+    url="https://github.com/lupko/etcd3-client",
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     install_requires=_REQUIRES,
