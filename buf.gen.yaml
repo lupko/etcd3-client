@@ -3,11 +3,11 @@ managed:
   enabled: true
 plugins:
   - name: python
-    out: .
+    out: src
   - name: mypy
-    out: .
+    out: src
   - name: python_grpc
-    out: .
+    out: src
     path: grpc_python_plugin
   - name: mypy_grpc
-    out: .
+    out: src

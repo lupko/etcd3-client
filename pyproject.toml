@@ -4,7 +4,7 @@ version = "0.90.0"
 description = "Python client for the etcd3"
 authors = ["GoodData Inc. <support@gooddata.com>", "etcd3 authors"]
 readme = "README.md"
-packages = [{include = "etcd3"}]
+packages = [{include = "etcd3", from = "src"}]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -37,7 +37,7 @@ types-protobuf= "~4.21.0.2"
 
 [tool.pytest.ini_options]
 minversion = 7.0
-pythonpath = [ "tests" ]
+pythonpath = [ "tests", "src" ]
 testpaths = [ "tests" ]
 
 [tool.mypy]
@@ -47,7 +47,8 @@ strict_equality = true
 mypy_path = "etcd3"
 
 [[tool.mypy.overrides]]
-module = ["mypy-grpc.*"]
+module = ["mypy-grpc.*", "grpc.*"]
+ignore_missing_imports = true
 
 [tool.isort]
 profile = "black"
