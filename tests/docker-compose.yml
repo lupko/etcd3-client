@@ -26,7 +26,7 @@ services:
       options:
         max-size: "1m"
         max-file: "5"
-    restart: always
+    restart: "no"
 
   etcd-test2:
     image: quay.io/coreos/etcd:v3.5.6
@@ -53,7 +53,7 @@ services:
       options:
         max-size: "1m"
         max-file: "5"
-    restart: always
+    restart: "no"
 
   etcd-test3:
     image: quay.io/coreos/etcd:v3.5.6
@@ -80,7 +80,7 @@ services:
       options:
         max-size: "1m"
         max-file: "5"
-    restart: always
+    restart: "no"
 
 volumes:
   etcd-test1-vol:
