@@ -14,5 +14,6 @@ eggs/
 *.egg
 
 .venv
+.venv-infra
 .idea
 .coverage

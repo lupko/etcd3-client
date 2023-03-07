@@ -1,6 +1,62 @@
+[tool.poetry]
+name = "etcd3-client"
+version = "0.90.0"
+description = "Python client for the etcd3"
+authors = ["GoodData Inc. <support@gooddata.com>", "etcd3 authors"]
+readme = "README.md"
+packages = [{include = "etcd3"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+grpcio = ">=1.33.2,<2.0.0"
+protobuf = ">=3.20.0,<5.0.0"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.0.0"
+black = "~22.12.0"
+isort = "^5.11.4"
+mypy = "0.991"
+
+mock = "~5.0.0"
+pytest = "^7.2.0"
+pytest-cov = "^4.0.0"
+pytest-docker = "~1.0.1"
+types-protobuf= "~4.21.0.2"
+
+[tool.poetry_bumpversion.file."etcd3/__init__.py"]
+
+[tool.pytest.ini_options]
+minversion = 7.0
+pythonpath = [ "tests" ]
+testpaths = [ "tests" ]
+
+[tool.mypy]
+disallow_untyped_defs = true
+warn_redundant_casts = true
+strict_equality = true
+mypy_path = "etcd3"
+
+[[tool.mypy.overrides]]
+module = ["mypy-grpc.*"]
+
 [tool.isort]
 profile = "black"
 
 [tool.black]
-target-version = ['py310']
+target-version = ['py39']
 # extend-exclude = 'regex here'
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

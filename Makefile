@@ -1,9 +1,10 @@
 .PHONY: dev
 dev:
-	python3.11 -m venv .venv --upgrade-deps
-	.venv/bin/pip3 install -r requirements-dev.txt
-	.venv/bin/pip3 install -r requirements.txt
-	.venv/bin/pre-commit install
+	python3.11 -m venv .venv-infra --upgrade-deps
+	.venv-infra/bin/pip3 install -r requirements-infra.txt
+	.venv-infra/bin/pre-commit install
+	.venv-infra/bin/poetry self add poetry-bumpversion
+	.venv-infra/bin/poetry install --no-root
 
 .PHONY: lint
 lint:
@@ -30,6 +31,10 @@ fix-all:
 mypy:
 	mypy --show-error-codes etcd3
 
-.PHONY: mypy
+.PHONY: test
 test:
-	pytest -cov
+	poetry run pytest -cov
+
+.PHONY: build
+build:
+	poetry build
