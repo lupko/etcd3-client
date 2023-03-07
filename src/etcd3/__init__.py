@@ -106,6 +106,3 @@ def as_txn_op_result(response: TxResponse) -> etcdrpc.TxnResponse:
     )
 
     return response.response_txn
-
-
-__version__ = "0.90.0"

@@ -3,7 +3,6 @@ dev:
 	python3.11 -m venv .venv-infra --upgrade-deps
 	.venv-infra/bin/pip3 install -r requirements-infra.txt
 	.venv-infra/bin/pre-commit install
-	.venv-infra/bin/poetry self add poetry-bumpversion
 	python3.11 -m venv .venv --upgrade-deps
 	source .venv/bin/activate && .venv-infra/bin/poetry install --no-root
 
