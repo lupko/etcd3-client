@@ -57,7 +57,7 @@ to the original package.
 
 After you clone the repository, make sure to initialize the development environment using `make dev`. This will set
 up virtual environment for the project with all the dependencies installed. If you use direnv tool, do `direnv allow`
-to auto-activate the virtual environment - otherwise activate manually using `.venv/bin/activate`.
+to auto-activate the virtual environment - otherwise activate manually using `source .envrc`.
 
 With virtual environment activated, you can:
 
