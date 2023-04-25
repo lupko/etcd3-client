@@ -366,3 +366,42 @@ def test_get_all_sort_target(get_fixture):
 
     assert results[0][1].key == last_key
     assert results[-1][1].key == first_key
+
+
+# note: intentionally keeping this test as it adds extra key and this would break
+# the various get range tests
+def test_get_revision(get_fixture):
+    client1, keyspace = get_fixture
+
+    _, meta = client1.get(keyspace("test/0"))
+    revision_without_new_key = meta.create_revision
+
+    # add some new test key
+    test_key = keyspace("test_get_revision")
+    response = client1.put(test_key, "value1")
+    # keep rev at which it was created with the original value
+    original_rev = response.header.revision
+    # and also create new revision with the new value
+    client1.put(test_key, "value2")
+
+    # getting latest revision -> most recent state
+    val, _ = client1.get(test_key)
+    assert val == b"value2"
+
+    # getting revision at which the key was created -> original state after first put
+    val, _ = client1.get(test_key, revision=original_rev)
+    assert val == b"value1"
+
+    # getting revision at which the key did not exist -> no result
+    val, meta = client1.get(test_key, revision=revision_without_new_key)
+    assert val is None
+
+    # getting prefix (range) at latest revision - gets the key
+    prefix_get = list(client1.get_prefix(keyspace("test_")))
+    assert len(prefix_get) == 1
+
+    # getting prefix (range) at revision when the key did not exist - no result
+    prefix_get = list(
+        client1.get_prefix(keyspace("test_"), revision=revision_without_new_key)
+    )
+    assert len(prefix_get) == 0

@@ -18,6 +18,7 @@ def build_get_range_request(
     sort_target: Optional[RangeSortTarget] = None,
     serializable: bool = False,
     keys_only: bool = False,
+    revision: int = 0,
 ) -> etcdrpc.RangeRequest:
     range_request = etcdrpc.RangeRequest()
     range_request.key = to_bytes(key)
@@ -49,6 +50,7 @@ def build_get_range_request(
             'sort_target must be one of "key", "version", "create", "mod" or "value"'
         )
 
+    range_request.revision = revision
     range_request.serializable = serializable
 
     return range_request

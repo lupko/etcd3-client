@@ -205,10 +205,12 @@ class Etcd3Client:
 
     @_handle_errors
     def get_response(
-        self, key: Union[str, bytes], serializable: bool = False
+        self, key: Union[str, bytes], serializable: bool = False, revision: int = 0
     ) -> etcdrpc.RangeResponse:
         """Get the value of a key from etcd."""
-        range_request = build_get_range_request(key, serializable=serializable)
+        range_request = build_get_range_request(
+            key, serializable=serializable, revision=revision
+        )
 
         return self.kvstub.Range(
             range_request,
@@ -218,7 +220,7 @@ class Etcd3Client:
         )
 
     def get(
-        self, key: Union[str, bytes], serializable: bool = False
+        self, key: Union[str, bytes], serializable: bool = False, revision: int = 0
     ) -> Union[Tuple[None, None], KVResult]:
         """
         Get the value and metadata of a key from etcd. If the key does not exist, then both value and metadata
@@ -236,10 +238,12 @@ class Etcd3Client:
         :param key: key in etcd to get
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
         :returns: value of key and metadata
         :rtype: bytes, ``KVMetadata``
         """
-        range_response = self.get_response(key, serializable)
+        range_response = self.get_response(key, serializable, revision=revision)
 
         if range_response.count < 1:
             return None, None
@@ -248,7 +252,7 @@ class Etcd3Client:
         return kv.value, KVMetadata.create(kv, range_response.header)
 
     def get_strict(
-        self, key: Union[str, bytes], serializable: bool = False
+        self, key: Union[str, bytes], serializable: bool = False, revision: int = 0
     ) -> KVResult:
         """
         Get the value of a key from etcd; fails with KeyError if no such key exists.
@@ -265,11 +269,13 @@ class Etcd3Client:
         :param key: key in etcd to get
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
         :returns: value of key and metadata
         :rtype: bytes, ``KVMetadata``
         :raise: KeyError if the requested key is not
         """
-        range_response = self.get_response(key, serializable)
+        range_response = self.get_response(key, serializable, revision=revision)
 
         if range_response.count < 1:
             raise KeyError(key)
@@ -285,6 +291,7 @@ class Etcd3Client:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
+        revision: int = 0,
     ) -> etcdrpc.RangeResponse:
         """Get a range of keys with a prefix."""
         range_request = build_get_range_request(
@@ -294,6 +301,7 @@ class Etcd3Client:
             sort_order=sort_order,
             sort_target=sort_target,
             serializable=serializable,
+            revision=revision,
         )
 
         return self.kvstub.Range(
@@ -310,6 +318,7 @@ class Etcd3Client:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
+        revision: int = 0,
     ) -> Generator[KVResult, None, None]:
         """
         Get a range of keys with a prefix.
@@ -320,7 +329,8 @@ class Etcd3Client:
         :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
-
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
         :returns: sequence of (value, metadata) tuples
         """
         range_response = self.get_prefix_response(
@@ -329,6 +339,7 @@ class Etcd3Client:
             sort_order=sort_order,
             sort_target=sort_target,
             serializable=serializable,
+            revision=revision,
         )
 
         for kv in range_response.kvs:
@@ -343,6 +354,7 @@ class Etcd3Client:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
+        revision: int = 0,
     ) -> etcdrpc.RangeResponse:
         """Get a range of keys."""
         range_request = build_get_range_request(
@@ -352,6 +364,7 @@ class Etcd3Client:
             sort_order=sort_order,
             sort_target=sort_target,
             serializable=serializable,
+            revision=revision,
         )
 
         return self.kvstub.Range(
@@ -369,6 +382,7 @@ class Etcd3Client:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
+        revision: int = 0,
     ) -> Generator[KVResult, None, None]:
         """
         Get a range of keys.
@@ -380,7 +394,8 @@ class Etcd3Client:
         :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
-
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
         :returns: sequence of (value, metadata) tuples
         """
         range_response = self.get_range_response(
@@ -390,6 +405,7 @@ class Etcd3Client:
             sort_order=sort_order,
             sort_target=sort_target,
             serializable=serializable,
+            revision=revision,
         )
 
         for kv in range_response.kvs:
@@ -402,6 +418,7 @@ class Etcd3Client:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
+        revision: int = 0,
     ) -> etcdrpc.RangeResponse:
         """Get all keys currently stored in etcd."""
         range_request = build_get_range_request(
@@ -411,6 +428,7 @@ class Etcd3Client:
             sort_order=sort_order,
             sort_target=sort_target,
             serializable=serializable,
+            revision=revision,
         )
 
         return self.kvstub.Range(
@@ -426,6 +444,7 @@ class Etcd3Client:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
+        revision: int = 0,
     ) -> Generator[KVResult, None, None]:
         """
         Get all keys currently stored in etcd.
@@ -435,6 +454,8 @@ class Etcd3Client:
         :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
         :returns: sequence of (value, metadata) tuples
         """
 
@@ -443,6 +464,7 @@ class Etcd3Client:
             sort_order=sort_order,
             sort_target=sort_target,
             serializable=serializable,
+            revision=revision,
         )
 
         for kv in range_response.kvs:
