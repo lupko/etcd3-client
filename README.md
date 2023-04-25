@@ -10,6 +10,12 @@ to the original package.
 
 ## Changelog
 
+### 0.92.0
+
+- Allow `get` calls on particular revision
+  - This is enabled on all get calls including `get` done in transactions using `TransactionBuilder`
+  - Compaction errors are propagated as-is without additional wrapping
+
 ### 0.91.0
 
 - API Improvements - running transactions
