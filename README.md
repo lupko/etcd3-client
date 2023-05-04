@@ -10,6 +10,14 @@ to the original package.
 
 ## Changelog
 
+### 0.93.0
+
+- Allow `timeout_override` on all calls
+  - The timeout specified when client is created is used by default for all calls
+  - On per-call basis, it is possible to override this and use different value
+  - You may find this useful if you normally keep the timeouts low and aggressive but then have
+    a few outlier calls that are expected to take longer.
+
 ### 0.92.0
 
 - Allow `get` calls on particular revision
