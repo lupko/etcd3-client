@@ -205,7 +205,11 @@ class Etcd3Client:
 
     @_handle_errors
     def get_response(
-        self, key: Union[str, bytes], serializable: bool = False, revision: int = 0
+        self,
+        key: Union[str, bytes],
+        serializable: bool = False,
+        revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.RangeResponse:
         """Get the value of a key from etcd."""
         range_request = build_get_range_request(
@@ -214,13 +218,17 @@ class Etcd3Client:
 
         return self.kvstub.Range(
             range_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     def get(
-        self, key: Union[str, bytes], serializable: bool = False, revision: int = 0
+        self,
+        key: Union[str, bytes],
+        serializable: bool = False,
+        revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> Union[Tuple[None, None], KVResult]:
         """
         Get the value and metadata of a key from etcd. If the key does not exist, then both value and metadata
@@ -240,10 +248,14 @@ class Etcd3Client:
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
          to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: value of key and metadata
         :rtype: bytes, ``KVMetadata``
         """
-        range_response = self.get_response(key, serializable, revision=revision)
+        range_response = self.get_response(
+            key, serializable, revision=revision, timeout_override=timeout_override
+        )
 
         if range_response.count < 1:
             return None, None
@@ -252,7 +264,11 @@ class Etcd3Client:
         return kv.value, KVMetadata.create(kv, range_response.header)
 
     def get_strict(
-        self, key: Union[str, bytes], serializable: bool = False, revision: int = 0
+        self,
+        key: Union[str, bytes],
+        serializable: bool = False,
+        revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> KVResult:
         """
         Get the value of a key from etcd; fails with KeyError if no such key exists.
@@ -271,11 +287,15 @@ class Etcd3Client:
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
          to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: value of key and metadata
         :rtype: bytes, ``KVMetadata``
         :raise: KeyError if the requested key is not
         """
-        range_response = self.get_response(key, serializable, revision=revision)
+        range_response = self.get_response(
+            key, serializable, revision=revision, timeout_override=timeout_override
+        )
 
         if range_response.count < 1:
             raise KeyError(key)
@@ -292,6 +312,7 @@ class Etcd3Client:
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
         revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.RangeResponse:
         """Get a range of keys with a prefix."""
         range_request = build_get_range_request(
@@ -306,7 +327,7 @@ class Etcd3Client:
 
         return self.kvstub.Range(
             range_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -319,6 +340,7 @@ class Etcd3Client:
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
         revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> Generator[KVResult, None, None]:
         """
         Get a range of keys with a prefix.
@@ -331,6 +353,8 @@ class Etcd3Client:
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
          to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: sequence of (value, metadata) tuples
         """
         range_response = self.get_prefix_response(
@@ -340,6 +364,7 @@ class Etcd3Client:
             sort_target=sort_target,
             serializable=serializable,
             revision=revision,
+            timeout_override=timeout_override,
         )
 
         for kv in range_response.kvs:
@@ -355,6 +380,7 @@ class Etcd3Client:
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
         revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.RangeResponse:
         """Get a range of keys."""
         range_request = build_get_range_request(
@@ -369,7 +395,7 @@ class Etcd3Client:
 
         return self.kvstub.Range(
             range_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -383,6 +409,7 @@ class Etcd3Client:
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
         revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> Generator[KVResult, None, None]:
         """
         Get a range of keys.
@@ -396,6 +423,8 @@ class Etcd3Client:
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
          to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: sequence of (value, metadata) tuples
         """
         range_response = self.get_range_response(
@@ -406,6 +435,7 @@ class Etcd3Client:
             sort_target=sort_target,
             serializable=serializable,
             revision=revision,
+            timeout_override=timeout_override,
         )
 
         for kv in range_response.kvs:
@@ -419,6 +449,7 @@ class Etcd3Client:
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
         revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.RangeResponse:
         """Get all keys currently stored in etcd."""
         range_request = build_get_range_request(
@@ -433,7 +464,7 @@ class Etcd3Client:
 
         return self.kvstub.Range(
             range_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -445,6 +476,7 @@ class Etcd3Client:
         sort_target: Optional[RangeSortTarget] = None,
         serializable: bool = False,
         revision: int = 0,
+        timeout_override: Optional[int] = None,
     ) -> Generator[KVResult, None, None]:
         """
         Get all keys currently stored in etcd.
@@ -456,6 +488,8 @@ class Etcd3Client:
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
          to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: sequence of (value, metadata) tuples
         """
 
@@ -465,6 +499,7 @@ class Etcd3Client:
             sort_target=sort_target,
             serializable=serializable,
             revision=revision,
+            timeout_override=timeout_override,
         )
 
         for kv in range_response.kvs:
@@ -477,6 +512,7 @@ class Etcd3Client:
         value: Union[str, bytes],
         lease: Optional[Union[int, Lease]] = None,
         prev_kv: bool = False,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.PutResponse:
         """
         Save a value to etcd.
@@ -496,6 +532,8 @@ class Etcd3Client:
         :type lease: either :class:`.Lease`, or int (ID of lease)
         :param prev_kv: return the previous key-value pair
         :type prev_kv: bool
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: a response containing a header and the prev_kv
         :rtype: :class:`.rpc_pb2.PutResponse`
         """
@@ -503,7 +541,7 @@ class Etcd3Client:
 
         return self.kvstub.Put(
             put_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -513,6 +551,7 @@ class Etcd3Client:
         key: Union[str, bytes],
         value: Union[str, bytes],
         lease: Optional[Union[int, Lease]] = None,
+        timeout_override: Optional[int] = None,
     ) -> Tuple[bool, Optional[etcdrpc.PutResponse]]:
         """
         Atomically puts a value only if the key previously had no value.
@@ -527,6 +566,8 @@ class Etcd3Client:
         :type value: bytes
         :param lease: Lease to associate with this key.
         :type lease: either :class:`.Lease`, or int (ID of lease)
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: state of transaction, ``True`` if the put was successful,
                   ``False`` otherwise
         :rtype: bool
@@ -535,6 +576,7 @@ class Etcd3Client:
             compare=[self.transactions.create(key) == "0"],
             success=[self.transactions.put(key, value, lease=lease)],
             failure=[],
+            timeout_override=timeout_override,
         )
 
         if status:
@@ -548,6 +590,7 @@ class Etcd3Client:
         initial_value: Union[str, bytes],
         new_value: Union[str, bytes],
         lease: Optional[Union[int, Lease]] = None,
+        timeout_override: Optional[int] = None,
     ) -> Tuple[bool, Optional[etcdrpc.PutResponse]]:
         """
         Atomically replace the value of a key with a new value.
@@ -566,6 +609,8 @@ class Etcd3Client:
         :type new_value: bytes
         :param lease: Lease to associate with the key (if the replace is successful).
         :type lease: either :class:`.Lease`, or int (ID of lease)
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: status of transaction, ``True`` if the replace was successful, ``False`` otherwise
         :rtype: bool
         """
@@ -573,6 +618,7 @@ class Etcd3Client:
             compare=[self.transactions.value(key) == initial_value],
             success=[self.transactions.put(key, new_value, lease=lease)],
             failure=[],
+            timeout_override=timeout_override,
         )
 
         if status:
@@ -585,6 +631,7 @@ class Etcd3Client:
         self,
         key: Union[str, bytes],
         prev_kv: bool = False,
+        timeout_override: Optional[int] = None,
     ) -> Tuple[bool, Optional[etcdrpc.DeleteRangeResponse]]:
         """
         Delete a single key in etcd.
@@ -595,6 +642,8 @@ class Etcd3Client:
         :param key: key in etcd to delete
         :param prev_kv: return the deleted key-value pair
         :type prev_kv: bool
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: True if the key has been deleted when
                   ``return_response`` is False and a response containing
                   a header, the number of deleted keys and prev_kvs when
@@ -603,7 +652,7 @@ class Etcd3Client:
         delete_request = build_delete_request(key, prev_kv=prev_kv)
         delete_response = self.kvstub.DeleteRange(
             delete_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -615,7 +664,10 @@ class Etcd3Client:
 
     @_handle_errors
     def delete_prefix(
-        self, prefix: Union[str, bytes], prev_kv: bool = False
+        self,
+        prefix: Union[str, bytes],
+        prev_kv: bool = False,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.DeleteRangeResponse:
         """Delete a range of keys with a prefix in etcd."""
         delete_request = build_delete_request(
@@ -624,7 +676,7 @@ class Etcd3Client:
 
         return self.kvstub.DeleteRange(
             delete_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -635,24 +687,25 @@ class Etcd3Client:
         key: Union[str, bytes],
         range_end: Union[str, bytes],
         prev_kv: bool = False,
+        timeout_override: Optional[int] = None,
     ) -> etcdrpc.DeleteRangeResponse:
         """Delete a range of keys with a prefix in etcd."""
         delete_request = build_delete_request(key, range_end=range_end, prev_kv=prev_kv)
 
         return self.kvstub.DeleteRange(
             delete_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     @_handle_errors
-    def status(self) -> Status:
+    def status(self, timeout_override: Optional[int] = None) -> Status:
         """Get the status of the responding member."""
         status_request = etcdrpc.StatusRequest()
         status_response = self.maintenancestub.Status(
             status_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1119,6 +1172,7 @@ class Etcd3Client:
         compare: Iterable[TxCondition],
         success: Optional[Iterable[TxOp]] = None,
         failure: Optional[Iterable[TxOp]] = None,
+        timeout_override: Optional[int] = None,
     ) -> TxResult:
         """
         Perform a transaction.
@@ -1145,6 +1199,8 @@ class Etcd3Client:
                         are true
         :param failure: A list of operations to perform if any of the
                         comparisons are false
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :return: A tuple of (operation status, responses)
         """
 
@@ -1152,7 +1208,7 @@ class Etcd3Client:
 
         txn_response: etcdrpc.TxnResponse = self.kvstub.Txn(
             transaction_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1179,7 +1235,9 @@ class Etcd3Client:
         return txn_response.succeeded, responses
 
     @_handle_errors
-    def txn(self, tx: TransactionBuilder) -> TransactionResponse:
+    def txn(
+        self, tx: TransactionBuilder, timeout_override: Optional[int] = None
+    ) -> TransactionResponse:
         """
         Perform a transaction as defined in the `TransactionBuilder`.
 
@@ -1190,12 +1248,14 @@ class Etcd3Client:
         typed access to the results.
 
         :param tx: transaction builder
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :return: transaction response
         """
         request = tx.request
         response: etcdrpc.TxnResponse = self.kvstub.Txn(
             request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1203,7 +1263,12 @@ class Etcd3Client:
         return TransactionResponse(response)
 
     @_handle_errors
-    def lease(self, ttl: int, lease_id: Optional[int] = None) -> Lease:
+    def lease(
+        self,
+        ttl: int,
+        lease_id: Optional[int] = None,
+        timeout_override: Optional[int] = None,
+    ) -> Lease:
         """
         Create a new lease.
 
@@ -1213,14 +1278,15 @@ class Etcd3Client:
 
         :param ttl: Requested time to live
         :param lease_id: Requested ID for the lease
-
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: new lease
         :rtype: :class:`.Lease`
         """
         lease_grant_request = etcdrpc.LeaseGrantRequest(TTL=ttl, ID=lease_id or 0)
         lease_grant_response = self.leasestub.LeaseGrant(
             lease_grant_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1233,23 +1299,27 @@ class Etcd3Client:
         )
 
     @_handle_errors
-    def revoke_lease(self, lease_id: int) -> None:
+    def revoke_lease(
+        self, lease_id: int, timeout_override: Optional[int] = None
+    ) -> None:
         """
         Revoke a lease.
 
         :param lease_id: ID of the lease to revoke.
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         """
         lease_revoke_request = etcdrpc.LeaseRevokeRequest(ID=lease_id)
         self.leasestub.LeaseRevoke(
             lease_revoke_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     @_handle_errors
     def refresh_lease(
-        self, lease_id: int
+        self, lease_id: int, timeout_override: Optional[int] = None
     ) -> Generator[etcdrpc.LeaseKeepAliveResponse, None, None]:
         """
         Refreshes the lease. This returns a generator that will yield exactly once and will provide the
@@ -1258,6 +1328,8 @@ class Etcd3Client:
         Note: if the refresh failed, the TTL field of the response will be 0.
 
         :param lease_id: lease id to refresh
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :return: generator that yields one refresh response and then ends
         """
         keep_alive_request = etcdrpc.LeaseKeepAliveRequest(ID=lease_id)
@@ -1265,7 +1337,7 @@ class Etcd3Client:
 
         for response in self.leasestub.LeaseKeepAlive(
             iter(request_stream),
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         ):
@@ -1273,23 +1345,28 @@ class Etcd3Client:
 
     @_handle_errors
     def get_lease_info(
-        self, lease_id: int, keys: bool = True
+        self, lease_id: int, keys: bool = True, timeout_override: Optional[int] = None
     ) -> etcdrpc.LeaseTimeToLiveResponse:
         # only available in etcd v3.1.0 and later
         ttl_request = etcdrpc.LeaseTimeToLiveRequest(ID=lease_id, keys=keys)
 
         return self.leasestub.LeaseTimeToLive(
             ttl_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     @_handle_errors
-    def add_member(self, urls: Iterable[str]) -> Member:
+    def add_member(
+        self, urls: Iterable[str], timeout_override: Optional[int] = None
+    ) -> Member:
         """
         Add a member into the cluster.
 
+        :param urls: peer urls
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: new member
         :rtype: :class:`.Member`
         """
@@ -1297,7 +1374,7 @@ class Etcd3Client:
 
         member_add_response: etcdrpc.MemberAddResponse = self.clusterstub.MemberAdd(
             member_add_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1312,29 +1389,40 @@ class Etcd3Client:
         )
 
     @_handle_errors
-    def remove_member(self, member_id: int) -> None:
+    def remove_member(
+        self, member_id: int, timeout_override: Optional[int] = None
+    ) -> None:
         """
         Remove an existing member from the cluster.
 
         :param member_id: ID of the member to remove
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         """
         member_rm_request = etcdrpc.MemberRemoveRequest(ID=member_id)
 
         self.clusterstub.MemberRemove(
             member_rm_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     @_handle_errors
-    def update_member(self, member_id: int, peer_urls: Iterable[str]) -> None:
+    def update_member(
+        self,
+        member_id: int,
+        peer_urls: Iterable[str],
+        timeout_override: Optional[int] = None,
+    ) -> None:
         """
         Update the configuration of an existing member in the cluster.
 
         :param member_id: ID of the member to update
         :param peer_urls: new list of peer urls the member will use to
                           communicate with the cluster
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         """
         member_update_request = etcdrpc.MemberUpdateRequest(
             ID=member_id, peerURLs=list(peer_urls)
@@ -1342,23 +1430,26 @@ class Etcd3Client:
 
         self.clusterstub.MemberUpdate(
             member_update_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     @property
-    def members(self) -> Generator[Member, None, None]:
+    def members(
+        self, timeout_override: Optional[int] = None
+    ) -> Generator[Member, None, None]:
         """
         List of all members associated with the cluster.
 
         :type: sequence of :class:`.Member`
-
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         """
         member_list_request = etcdrpc.MemberListRequest()
         member_list_response: etcdrpc.MemberListResponse = self.clusterstub.MemberList(
             member_list_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1372,7 +1463,12 @@ class Etcd3Client:
             )
 
     @_handle_errors
-    def compact(self, revision: int, physical: bool = False) -> None:
+    def compact(
+        self,
+        revision: int,
+        physical: bool = False,
+        timeout_override: Optional[int] = None,
+    ) -> None:
         """
         Compact the event history in etcd up to a given revision.
 
@@ -1384,25 +1480,29 @@ class Etcd3Client:
                          compaction is physically applied to the local database
                          such that compacted entries are totally removed from
                          the backend database
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         """
         compact_request = etcdrpc.CompactionRequest(
             revision=revision, physical=physical
         )
         self.kvstub.Compact(
             compact_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
 
     @_handle_errors
-    def defragment(self) -> etcdrpc.DefragmentResponse:
+    def defragment(
+        self, timeout_override: Optional[int] = None
+    ) -> etcdrpc.DefragmentResponse:
         """Defragment a member's backend database to recover storage space."""
         defrag_request = etcdrpc.DefragmentRequest()
 
         return self.maintenancestub.Defragment(
             defrag_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1420,7 +1520,10 @@ class Etcd3Client:
 
     @_handle_errors
     def create_alarm(
-        self, member_id: int = 0, alarm_type: AlarmType = "no space"
+        self,
+        member_id: int = 0,
+        alarm_type: AlarmType = "no space",
+        timeout_override: Optional[int] = None,
     ) -> List[Alarm]:
         """Create an alarm.
 
@@ -1431,6 +1534,8 @@ class Etcd3Client:
                           If 0, the alarm is created for all the members
                           of the cluster.
         :param alarm_type: type of alarm to create
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: list of :class:`.Alarm`
         """
         alarm_request = build_alarm_request(
@@ -1441,7 +1546,7 @@ class Etcd3Client:
 
         alarm_response: etcdrpc.AlarmResponse = self.maintenancestub.Alarm(
             alarm_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1450,7 +1555,10 @@ class Etcd3Client:
 
     @_handle_errors
     def list_alarms(
-        self, member_id: int = 0, alarm_type: AlarmType = "none"
+        self,
+        member_id: int = 0,
+        alarm_type: AlarmType = "none",
+        timeout_override: Optional[int] = None,
     ) -> Generator[Alarm, None, None]:
         """List the activated alarms.
 
@@ -1458,6 +1566,8 @@ class Etcd3Client:
                            If 0, the alarm is created for all the members
                            of the cluster.
         :param alarm_type: type of alarm to list
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: sequence of :class:`.Alarm`
         """
         alarm_request = build_alarm_request(
@@ -1467,7 +1577,7 @@ class Etcd3Client:
         )
         alarm_response = self.maintenancestub.Alarm(
             alarm_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1477,7 +1587,10 @@ class Etcd3Client:
 
     @_handle_errors
     def disarm_alarm(
-        self, member_id: int = 0, alarm_type: AlarmType = "no space"
+        self,
+        member_id: int = 0,
+        alarm_type: AlarmType = "no space",
+        timeout_override: Optional[int] = None,
     ) -> List[Alarm]:
         """Cancel an alarm.
 
@@ -1485,6 +1598,8 @@ class Etcd3Client:
                           If 0, the alarm is canceled for all the members
                           of the cluster.
         :param alarm_type: type of alarm to disarm
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         :returns: List of :class:`.Alarm`
         """
         alarm_request = build_alarm_request(
@@ -1494,7 +1609,7 @@ class Etcd3Client:
         )
         alarm_response = self.maintenancestub.Alarm(
             alarm_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
@@ -1502,15 +1617,19 @@ class Etcd3Client:
         return [Alarm(alarm.alarm, alarm.memberID) for alarm in alarm_response.alarms]
 
     @_handle_errors
-    def snapshot(self, file_obj: BinaryIO) -> None:
+    def snapshot(
+        self, file_obj: BinaryIO, timeout_override: Optional[int] = None
+    ) -> None:
         """Take a snapshot of the database.
 
         :param file_obj: A file-like object to write the database contents in.
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
         """
         snapshot_request = etcdrpc.SnapshotRequest()
         snapshot_response = self.maintenancestub.Snapshot(
             snapshot_request,
-            self.timeout,
+            timeout_override or self.timeout,
             credentials=self.call_credentials,
             metadata=self.metadata,
         )
