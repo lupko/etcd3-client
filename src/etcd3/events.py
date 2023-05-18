@@ -11,10 +11,7 @@ class Event:
     __slots__ = ("_value", "_kv_meta", "_prev_value", "_prev_kv_meta", "_event")
 
     def __init__(self, event: etcdrpc.Event, header: etcdrpc.ResponseHeader):
-        self._value = event.kv.value
         self._kv_meta = KVMetadata.create(kv=event.kv, header=header)
-
-        self._prev_value = event.prev_kv.value
         self._prev_kv_meta = KVMetadata.create(kv=event.prev_kv, header=header)
 
         self._event = event
@@ -35,7 +32,7 @@ class Event:
         """
         :return: value of the key (always b"" if delete event)
         """
-        return self._value
+        return self._event.kv.value
 
     @property
     def kv_meta(self) -> KVMetadata:
@@ -49,7 +46,7 @@ class Event:
         """
         :return: value of the previous version of the key (in delete events, this is the value that got deleted)
         """
-        return self._prev_value
+        return self._event.prev_kv.value
 
     @property
     def prev_kv_meta(self) -> KVMetadata:
