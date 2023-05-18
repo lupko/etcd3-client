@@ -10,6 +10,12 @@ to the original package.
 
 ## Changelog
 
+### 0.94.0
+
+- Reduce memory usage for watches and events
+  - Watch internals now use classes with __slots__ for objects with high cardinality
+  - Switched to lazy get of value / prev_kv value in events
+
 ### 0.93.0
 
 - Allow `timeout_override` on all calls
