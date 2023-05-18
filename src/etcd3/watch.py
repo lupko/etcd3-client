@@ -15,7 +15,7 @@ from etcd3.request_factory import WatchFilterType, build_create_watch_request
 _log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WatchResponse:
     header: etcdrpc.ResponseHeader
     events: List[Event]
