@@ -10,6 +10,16 @@ to the original package.
 
 ## Changelog
 
+### 0.95.0
+
+- Allow `limit` argument on get_* calls
+  - The value specified in `limit` is passed to etcd server; limiting happens server side
+- Add support for paged gets of range of keys and keys starting with a prefix
+  - This can be useful for clients that do stream processing on large number of key-value pairs
+  - Without paging, the response from etcd can be quite large and lead to memory spikes in the client
+  - With paging, results are obtained in smaller pages, so these memory spikes are not so significant.
+  - The paged results are still presented as a single, continuous stream of key-value pairs
+
 ### 0.94.0
 
 - Reduce memory usage for watches and events
