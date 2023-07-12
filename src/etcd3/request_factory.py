@@ -18,11 +18,13 @@ def build_get_range_request(
     sort_target: Optional[RangeSortTarget] = None,
     serializable: bool = False,
     keys_only: bool = False,
+    limit: int = 0,
     revision: int = 0,
 ) -> etcdrpc.RangeRequest:
     range_request = etcdrpc.RangeRequest()
     range_request.key = to_bytes(key)
     range_request.keys_only = keys_only
+
     if range_end is not None:
         range_request.range_end = to_bytes(range_end)
 
@@ -49,6 +51,9 @@ def build_get_range_request(
         raise ValueError(
             'sort_target must be one of "key", "version", "create", "mod" or "value"'
         )
+
+    if limit > 0:
+        range_request.limit = limit
 
     range_request.revision = revision
     range_request.serializable = serializable

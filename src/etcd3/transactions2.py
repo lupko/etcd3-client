@@ -116,6 +116,7 @@ class OperationBuilder:
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
         keys_only: bool = False,
+        limit: int = 0,
         revision: int = 0,
     ) -> TransactionBuilder:
         """
@@ -126,6 +127,7 @@ class OperationBuilder:
         :param sort_order: indicate sort order for the keys
         :param sort_target: indicate the target field used for sorting ("key", "value", "version", "create", "mod")
         :param keys_only: optionally indicate that the response should only contain keys and the values should be omitted
+        :param limit: number of keys to get, zero or negative value means no limit. default is zero
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
          to zero, the get will be done on the latest version of the store
         :return: the transaction builder to which the operation was added
@@ -136,6 +138,7 @@ class OperationBuilder:
             sort_order=sort_order,
             sort_target=sort_target,
             keys_only=keys_only,
+            limit=limit,
             revision=revision,
         )
 

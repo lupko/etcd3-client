@@ -310,6 +310,7 @@ class Etcd3Client:
         keys_only: bool = False,
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
+        limit: int = 0,
         serializable: bool = False,
         revision: int = 0,
         timeout_override: Optional[int] = None,
@@ -321,6 +322,7 @@ class Etcd3Client:
             keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            limit=limit,
             serializable=serializable,
             revision=revision,
         )
@@ -338,6 +340,7 @@ class Etcd3Client:
         keys_only: bool = False,
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
+        limit: int = 0,
         serializable: bool = False,
         revision: int = 0,
         timeout_override: Optional[int] = None,
@@ -349,6 +352,7 @@ class Etcd3Client:
         :param keys_only: if True, retrieve only the keys, not the values
         :param sort_order: optionally specify result sorting; one of asc, desc, ascend, descend
         :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
+        :param limit: number of keys to get, zero or negative value means no limit. default is zero
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
@@ -362,6 +366,7 @@ class Etcd3Client:
             keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            limit=limit,
             serializable=serializable,
             revision=revision,
             timeout_override=timeout_override,
@@ -378,6 +383,7 @@ class Etcd3Client:
         keys_only: bool = False,
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
+        limit: int = 0,
         serializable: bool = False,
         revision: int = 0,
         timeout_override: Optional[int] = None,
@@ -389,6 +395,7 @@ class Etcd3Client:
             keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            limit=limit,
             serializable=serializable,
             revision=revision,
         )
@@ -407,6 +414,7 @@ class Etcd3Client:
         keys_only: bool = False,
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
+        limit: int = 0,
         serializable: bool = False,
         revision: int = 0,
         timeout_override: Optional[int] = None,
@@ -419,6 +427,7 @@ class Etcd3Client:
         :param keys_only: if True, retrieve only the keys, not the values
         :param sort_order: optionally specify result sorting; one of asc, desc, ascend, descend
         :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
+        :param limit: number of keys to get, zero or negative value means no limit. default is zero
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
@@ -433,6 +442,7 @@ class Etcd3Client:
             keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            limit=limit,
             serializable=serializable,
             revision=revision,
             timeout_override=timeout_override,
@@ -447,6 +457,7 @@ class Etcd3Client:
         keys_only: bool = False,
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
+        limit: int = 0,
         serializable: bool = False,
         revision: int = 0,
         timeout_override: Optional[int] = None,
@@ -458,6 +469,7 @@ class Etcd3Client:
             keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            limit=limit,
             serializable=serializable,
             revision=revision,
         )
@@ -474,6 +486,7 @@ class Etcd3Client:
         keys_only: bool = False,
         sort_order: Optional[RangeSortOrder] = None,
         sort_target: Optional[RangeSortTarget] = None,
+        limit: int = 0,
         serializable: bool = False,
         revision: int = 0,
         timeout_override: Optional[int] = None,
@@ -484,6 +497,7 @@ class Etcd3Client:
         :param keys_only: if True, retrieve only the keys, not the values
         :param sort_order: optionally specify result sorting; one of asc, desc, ascend, descend
         :param sort_target: what part of KV to sort on, one of key, value, version, create (revision), mod (revision)
+        :param limit: number of keys to get, zero or negative value means no limit. default is zero
         :param serializable: whether to allow serializable reads. This can
             result in stale reads
         :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
@@ -497,6 +511,7 @@ class Etcd3Client:
             keys_only=keys_only,
             sort_order=sort_order,
             sort_target=sort_target,
+            limit=limit,
             serializable=serializable,
             revision=revision,
             timeout_override=timeout_override,
