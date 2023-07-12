@@ -158,6 +158,32 @@ def test_get_prefix_sort_target(get_fixture):
     assert results[-1][1].key == last_key
 
 
+def test_get_prefix_paged(get_fixture):
+    client1, keyspace = get_fixture
+    prefix = keyspace("test/")
+
+    results = list(client1.get_prefix(prefix))
+    paged_results = list(client1.get_prefix_paged(prefix, page_size=3))
+
+    assert len(paged_results) == len(results)
+    for paged_result, non_paged_result in zip(paged_results, results):
+        assert paged_result[1].key == non_paged_result[1].key
+        assert paged_result[0] == non_paged_result[0]
+
+
+def test_get_prefix_paged_keys_only(get_fixture):
+    client1, keyspace = get_fixture
+    prefix = keyspace("test/")
+
+    results = list(client1.get_prefix(prefix, keys_only=True))
+    paged_results = list(client1.get_prefix_paged(prefix, keys_only=True, page_size=3))
+
+    assert len(paged_results) == len(results)
+    for paged_result, non_paged_result in zip(paged_results, results):
+        assert paged_result[1].key == non_paged_result[1].key
+        assert paged_result[0] == non_paged_result[0]
+
+
 def test_get_range1(get_fixture):
     client1, keyspace = get_fixture
     range_start = keyspace("test/")
@@ -294,6 +320,91 @@ def test_get_all_keys_only(get_fixture):
     assert len(results) >= 30
     for value, meta in results:
         assert value == b""
+
+
+def test_get_all_keys_only_with_limit(get_fixture):
+    client1, keyspace = get_fixture
+
+    results = list(client1.get_all(keys_only=True, limit=5))
+
+    assert len(results) == 5
+
+
+def test_get_range_paged1(get_fixture):
+    client1, keyspace = get_fixture
+    range_start = keyspace("test")
+    range_end = keyspace("xxx")
+
+    results = list(client1.get_range(range_start=range_start, range_end=range_end))
+    paged_results = list(
+        client1.get_range_paged(
+            range_start=range_start, range_end=range_end, page_size=1
+        )
+    )
+
+    assert len(paged_results) == len(results)
+
+    for paged_result, non_paged_result in zip(paged_results, results):
+        assert paged_result[1].key == non_paged_result[1].key
+        assert paged_result[0] == non_paged_result[0]
+
+
+def test_get_range_paged2(get_fixture):
+    client1, keyspace = get_fixture
+    range_start = keyspace("test")
+    range_end = keyspace("xxx")
+
+    results = list(client1.get_range(range_start=range_start, range_end=range_end))
+    paged_results = list(
+        client1.get_range_paged(
+            range_start=range_start, range_end=range_end, page_size=2
+        )
+    )
+
+    assert len(paged_results) == len(results)
+
+    for paged_result, non_paged_result in zip(paged_results, results):
+        assert paged_result[1].key == non_paged_result[1].key
+        assert paged_result[0] == non_paged_result[0]
+
+
+def test_get_range_paged3(get_fixture):
+    client1, keyspace = get_fixture
+    range_start = keyspace("test")
+    range_end = keyspace("xxx")
+
+    results = list(client1.get_range(range_start=range_start, range_end=range_end))
+    paged_results = list(
+        client1.get_range_paged(
+            range_start=range_start, range_end=range_end, page_size=3
+        )
+    )
+
+    assert len(paged_results) == len(results)
+    for paged_result, non_paged_result in zip(paged_results, results):
+        assert paged_result[1].key == non_paged_result[1].key
+        assert paged_result[0] == non_paged_result[0]
+
+
+def test_get_range_paged_keys_only(get_fixture):
+    client1, keyspace = get_fixture
+    range_start = keyspace("test")
+    range_end = keyspace("xxx")
+
+    results = list(
+        client1.get_range(range_start=range_start, range_end=range_end, keys_only=True)
+    )
+    paged_results = list(
+        client1.get_range_paged(
+            range_start=range_start, range_end=range_end, page_size=3, keys_only=True
+        )
+    )
+
+    assert len(paged_results) == len(results)
+
+    for paged_result, non_paged_result in zip(paged_results, results):
+        assert paged_result[1].key == non_paged_result[1].key
+        assert paged_result[0] == non_paged_result[0]
 
 
 def test_get_all_sort_order(get_fixture):
