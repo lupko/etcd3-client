@@ -539,7 +539,7 @@ class Etcd3Client:
         which can result in RSS usage spikes. If you want to mitigate such spikes, then paging is the answer.
 
         The limitation for paged gets is, that you cannot specify the sort order: the results will be paged in
-        key-ascending order.
+        the default, key-ascending order.
 
         Note on revision handling during pagination:
 
@@ -572,8 +572,6 @@ class Etcd3Client:
                 key=page_start,
                 range_end=range_end,
                 keys_only=keys_only,
-                sort_order="asc",
-                sort_target="key",
                 limit=page_size,
                 serializable=serializable,
                 revision=revision,
