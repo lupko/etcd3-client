@@ -10,6 +10,10 @@ to the original package.
 
 ## Changelog
 
+### 0.95.1
+
+- Fix for paged gets: do not send any sorting parameters as the default is already key-ascending order
+
 ### 0.95.0
 
 - Allow `limit` argument on get_* calls
