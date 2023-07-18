@@ -59,9 +59,9 @@ def test_watch_single_key_put(client1, keyspace, collector):
 
     responses = collector.expect(1)
     assert len(responses) == 1
-    assert isinstance(responses[0].events[0], etcd3.PutEvent)
+    assert isinstance(responses[0][0], etcd3.PutEvent)
 
-    evt = responses[0].events[0]
+    evt = responses[0][0]
 
     assert evt.key == test_key
     assert evt.value == b"test"
@@ -75,6 +75,9 @@ def test_watch_single_key_put(client1, keyspace, collector):
     assert evt.prev_kv_meta is not None
     assert evt.header is not None
 
+    for event in responses[0]:
+        assert event.key == test_key
+
 
 def test_watch_single_key_repeated_put(client1, keyspace, collector):
     test_key = keyspace("test")
@@ -87,8 +90,8 @@ def test_watch_single_key_repeated_put(client1, keyspace, collector):
     responses = collector.expect(2)
     assert len(responses) == 2
 
-    put1 = responses[0].events[0]
-    put2 = responses[1].events[0]
+    put1 = responses[0][0]
+    put2 = responses[1][0]
 
     assert isinstance(put1, etcd3.PutEvent)
     assert isinstance(put2, etcd3.PutEvent)
@@ -128,7 +131,7 @@ def test_watch_single_key_noput_filter(client1, keyspace, collector):
     responses = collector.expect(1)
 
     assert len(responses) == 1
-    evt = responses[0].events[0]
+    evt = responses[0][0]
 
     assert isinstance(evt, etcd3.DeleteEvent)
 
@@ -147,7 +150,7 @@ def test_watch_single_key_nodelete_filter(client1, keyspace, collector):
     responses = collector.expect(1)
 
     assert len(responses) == 1
-    assert isinstance(responses[0].events[0], etcd3.PutEvent)
+    assert isinstance(responses[0][0], etcd3.PutEvent)
 
     # deletes are not filtered, so they come through
     client1.delete(key=test_key)
@@ -164,7 +167,7 @@ def test_cancel_watch(client1, keyspace, collector):
     client1.put(key=test_key, value=b"test")
     responses = collector.expect(1)
     assert len(responses) == 1
-    assert isinstance(responses[0].events[0], etcd3.PutEvent)
+    assert isinstance(responses[0][0], etcd3.PutEvent)
 
     # cancel watch; no delete event should come in afterwards
     client1.cancel_watch(watch_id)
@@ -183,7 +186,7 @@ def test_multiple_watchers(client1, keyspace, collector, other_collector):
     responses = collector.expect(1)
     other_responses = other_collector.expect(1)
 
-    assert len(responses[0].events) == len(other_responses[0].events)
+    assert len(responses[0]) == len(other_responses[0])
 
 
 def test_watch_single_key_put_with_lease(client1, keyspace, collector):
@@ -196,9 +199,9 @@ def test_watch_single_key_put_with_lease(client1, keyspace, collector):
 
     responses = collector.expect(1)
     assert len(responses) == 1
-    assert isinstance(responses[0].events[0], etcd3.PutEvent)
+    assert isinstance(responses[0][0], etcd3.PutEvent)
 
-    evt = responses[0].events[0]
+    evt = responses[0][0]
     assert evt.lease == lease.id
 
 
@@ -227,7 +230,7 @@ def test_watch_with_compaction(client1, keyspace, collector):
     )
 
     response = collector.expect(1)
-    assert len(response[0].events) == 1
+    assert len(response[0]) == 1
 
 
 def test_watch_prefix(client1, keyspace, collector):
@@ -246,10 +249,10 @@ def test_watch_prefix(client1, keyspace, collector):
     )
 
     response = collector.expect(1)
-    assert len(response[0].events) == 3
-    assert response[0].events[0].key == keyspace("test/1")
-    assert response[0].events[1].key == keyspace("test/2")
-    assert response[0].events[2].key == keyspace("test/3")
+    assert len(response[0]) == 3
+    assert response[0][0].key == keyspace("test/1")
+    assert response[0][1].key == keyspace("test/2")
+    assert response[0][2].key == keyspace("test/3")
 
 
 def test_watch_response(client1, keyspace):
@@ -265,8 +268,8 @@ def test_watch_response(client1, keyspace):
     )
 
     for response in events:
-        assert len(response.events) == 1
-        assert isinstance(response.events[0], etcd3.PutEvent)
+        assert len(response) == 1
+        assert isinstance(response[0], etcd3.PutEvent)
         break
 
     cancel()

@@ -2,7 +2,18 @@ import logging
 import queue
 import threading
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import grpc
 from typing_extensions import TypeAlias
@@ -17,8 +28,56 @@ _log = logging.getLogger(__name__)
 
 @dataclass(frozen=True, slots=True)
 class WatchResponse:
-    header: etcdrpc.ResponseHeader
-    events: List[Event]
+    """
+    Response of watch operation.
+
+    This object is index-able and iterable. You can access events by their index, or you can iterate
+    through all events using a generator.
+
+    Alternatively, you can materialize all events into a list and work with it - but this is kept here
+    only for backward compatibility and its use is highly discouraged.
+    """
+
+    watch_response: etcdrpc.WatchResponse
+
+    @property
+    def header(self) -> etcdrpc.ResponseHeader:
+        return self.watch_response.header
+
+    @property
+    def events(self) -> List[Event]:
+        """
+        Gets all events in a list.
+
+        IMPORTANT: this will read and materialize all events. When working with large watch responses,
+        this method will lead to increased memory consumption. If this is a concern for you, consider
+        iterating this response which uses generators.
+
+        :return: all events in a list
+        """
+        return list(self.all())
+
+    def all(self) -> Generator[Event, None, None]:
+        """
+        Generator of events included in the watch response.
+
+        :return: generator yielding instances of `Event`
+        """
+        header = self.watch_response.header
+
+        for event in self.watch_response.events:
+            yield Event.create_event(event=event, header=header)
+
+    def __iter__(self) -> Generator[Event, None, None]:
+        yield from self.all()
+
+    def __getitem__(self, index: Any) -> Event:
+        return Event.create_event(
+            event=self.watch_response.events[index], header=self.header
+        )
+
+    def __len__(self) -> int:
+        return len(self.watch_response.events)
 
 
 WatchCallback: TypeAlias = Callable[[Union[Exception, WatchResponse]], Any]
@@ -215,11 +274,7 @@ class Watcher:
         if rs.events or not (rs.created or rs.canceled):
             # call the callback even when there are no events in the watch
             # response so as not to ignore progress notify responses.
-
-            new_events = [
-                Event.create_event(event=event, header=rs.header) for event in rs.events
-            ]
-            response = WatchResponse(rs.header, new_events)
+            response = WatchResponse(watch_response=rs)
 
             _safe_callback(callback, response)
 
