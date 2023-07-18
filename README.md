@@ -10,6 +10,15 @@ to the original package.
 
 ## Changelog
 
+### 0.96.0
+
+- Enhance WatchResponse to allow lazy event materialization
+  - Old implementation read and created instances of `Event` for all events in the response
+  - With large watch responses, this can contribute to memory usage spikes
+  - The response now allows iterating events via generator, accessing events by index and determining
+    number of events without the eager materialization
+- Refactored Event and KVMetadata classes to not eagerly access fields from etcd response
+
 ### 0.95.1
 
 - Fix for paged gets: do not send any sorting parameters as the default is already key-ascending order
