@@ -8,13 +8,14 @@ class Event:
     the raw events received via etcd watches.
     """
 
-    __slots__ = ("_value", "_kv_meta", "_prev_value", "_prev_kv_meta", "_event")
+    __slots__ = (
+        "_event",
+        "_header",
+    )
 
     def __init__(self, event: etcdrpc.Event, header: etcdrpc.ResponseHeader):
-        self._kv_meta = KVMetadata.create(kv=event.kv, header=header)
-        self._prev_kv_meta = KVMetadata.create(kv=event.prev_kv, header=header)
-
         self._event = event
+        self._header = header
 
     #
     # getters for the 'core' stuff
@@ -25,7 +26,7 @@ class Event:
         """
         :return: key to which the event pertains
         """
-        return self._kv_meta.key
+        return self._event.kv.key
 
     @property
     def value(self) -> bytes:
@@ -37,9 +38,9 @@ class Event:
     @property
     def kv_meta(self) -> KVMetadata:
         """
-        :return: key-value metadata
+        :return: key-value metadata, always creates new instance
         """
-        return self._kv_meta
+        return KVMetadata.create(kv=self.event.kv, header=self._header)
 
     @property
     def prev_value(self) -> bytes:
@@ -51,9 +52,9 @@ class Event:
     @property
     def prev_kv_meta(self) -> KVMetadata:
         """
-        :return: key-value metadata for the previous version of the key
+        :return: key-value metadata for the previous version of the key, always creates new instance
         """
-        return self._prev_kv_meta
+        return KVMetadata.create(kv=self._event.prev_kv, header=self._header)
 
     @property
     def event(self) -> etcdrpc.Event:
@@ -67,7 +68,7 @@ class Event:
         """
         :return: response header of the watch response that included this event
         """
-        return self._kv_meta.response_header
+        return self._header
 
     #
     # convenience, delegates, things to keep backward compatibility
@@ -75,39 +76,39 @@ class Event:
 
     @property
     def create_revision(self) -> int:
-        return self._kv_meta.create_revision
+        return self._event.kv.create_revision
 
     @property
     def mod_revision(self) -> int:
-        return self._kv_meta.mod_revision
+        return self._event.kv.mod_revision
 
     @property
     def version(self) -> int:
-        return self._kv_meta.version
+        return self._event.kv.version
 
     @property
     def lease(self) -> int:
-        return self._kv_meta.lease_id
+        return self._event.kv.lease
 
     @property
     def prev_key(self) -> bytes:
-        return self._prev_kv_meta.key
+        return self._event.prev_kv.key
 
     @property
     def prev_create_revision(self) -> int:
-        return self._prev_kv_meta.create_revision
+        return self._event.prev_kv.create_revision
 
     @property
     def prev_mod_revision(self) -> int:
-        return self._prev_kv_meta.mod_revision
+        return self._event.prev_kv.mod_revision
 
     @property
     def prev_version(self) -> int:
-        return self._prev_kv_meta.version
+        return self._event.prev_kv.version
 
     @property
     def prev_lease(self) -> int:
-        return self._prev_kv_meta.lease_id
+        return self._event.prev_kv.lease
 
     @staticmethod
     def create_event(event: etcdrpc.Event, header: etcdrpc.ResponseHeader) -> "Event":
