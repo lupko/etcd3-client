@@ -12,64 +12,48 @@ class KVMetadata:
     """
 
     __slots__ = (
-        "_key",
-        "_create_revision",
-        "_mod_revision",
-        "_version",
-        "_lease_id",
-        "_response_header",
+        "_kv",
+        "_header",
     )
 
-    def __init__(
-        self,
-        key: bytes,
-        create_revision: int,
-        mod_revision: int,
-        version: int,
-        lease_id: int,
-        response_header: etcdrpc.ResponseHeader,
-    ):
-        self._key: bytes = key
-        self._create_revision: int = create_revision
-        self._mod_revision: int = mod_revision
-        self._version: int = version
-        self._lease_id: int = lease_id
-        self._response_header: etcdrpc.ResponseHeader = response_header
+    def __init__(self, kv: etcdrpc.KeyValue, header: etcdrpc.ResponseHeader):
+        self._kv = kv
+        self._header = header
 
     @property
     def key(self) -> bytes:
         """
         :return: key name
         """
-        return self._key
+        return self._kv.key
 
     @property
     def create_revision(self) -> int:
         """
         :return: revision at which the key was created
         """
-        return self._create_revision
+        return self._kv.create_revision
 
     @property
     def mod_revision(self) -> int:
         """
         :return: revision at which the key was modified
         """
-        return self._mod_revision
+        return self._kv.mod_revision
 
     @property
     def version(self) -> int:
         """
         :return: key's version (number of times the key was modified)
         """
-        return self._version
+        return self._kv.version
 
     @property
     def lease_id(self) -> int:
         """
         :return: lease associated with this key; 0 if no lease associated
         """
-        return self._lease_id
+        return self._kv.lease
 
     @property
     def response_header(self) -> etcdrpc.ResponseHeader:
@@ -77,7 +61,7 @@ class KVMetadata:
         :return: header of etcd response which included the KeyValue information (this may be response for the
          get call or when KVMetadata comes from watches it will be header included in watch response)
         """
-        return self._response_header
+        return self._header
 
     @staticmethod
     def create(kv: etcdrpc.KeyValue, header: etcdrpc.ResponseHeader) -> "KVMetadata":
@@ -86,14 +70,7 @@ class KVMetadata:
 
         :return: always new instance of KVMetadata
         """
-        return KVMetadata(
-            key=kv.key,
-            create_revision=kv.create_revision,
-            mod_revision=kv.mod_revision,
-            version=kv.version,
-            lease_id=kv.lease,
-            response_header=header,
-        )
+        return KVMetadata(kv=kv, header=header)
 
 
 @dataclass(frozen=True)
