@@ -10,6 +10,13 @@ to the original package.
 
 ## Changelog
 
+### 0.97.0
+
+- Enhance WatchResponse with method to count events by type
+  - Done without materialization of event classes
+  - Useful especially for clients which analyze possibly large incoming event batches and
+    look for those that only describe DELETEs.
+
 ### 0.96.0
 
 - Enhance WatchResponse to allow lazy event materialization

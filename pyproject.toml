@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "etcd3-client"
-version = "0.96.0"
+version = "0.97.0"
 description = "Python client for the etcd3"
 authors = ["GoodData Inc. <support@gooddata.com>", "etcd3 authors"]
 readme = "README.md"
