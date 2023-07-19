@@ -75,8 +75,15 @@ def test_watch_single_key_put(client1, keyspace, collector):
     assert evt.prev_kv_meta is not None
     assert evt.header is not None
 
+    evt = responses[0][-1]
+    assert evt.key == test_key
+
     for event in responses[0]:
         assert event.key == test_key
+
+    put_events, delete_events = responses[0].event_counts
+    assert put_events == 1
+    assert delete_events == 0
 
 
 def test_watch_single_key_repeated_put(client1, keyspace, collector):

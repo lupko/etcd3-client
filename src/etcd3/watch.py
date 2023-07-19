@@ -57,6 +57,26 @@ class WatchResponse:
         """
         return list(self.all())
 
+    @property
+    def event_counts(self) -> tuple[int, int]:
+        """
+        Counts number of PUT and DELETE event types found in the watch response.
+
+        Note: this does not materialize the event classes.
+
+        :return: tuple of (number_of_put_events, number_of_delete_events)
+        """
+        put_events = 0
+        delete_events = 0
+
+        for event in self.watch_response.events:
+            if event.type == etcdrpc.Event.PUT:
+                put_events += 1
+            elif event.type == etcdrpc.Event.DELETE:
+                delete_events += 1
+
+        return put_events, delete_events
+
     def all(self) -> Generator[Event, None, None]:
         """
         Generator of events included in the watch response.
