@@ -2,12 +2,13 @@ version: v1
 managed:
   enabled: true
 plugins:
-  - name: python
+  # gencode to create protos compatible with 5.27.1
+  - plugin: buf.build/protocolbuffers/python:v27.1
+    out: src
+  # gencode from first grpcio version that supports Python 12
+  - plugin: buf.build/grpc/python:v1.59.3
     out: src
   - name: mypy
     out: src
-  - name: python_grpc
-    out: src
-    path: grpc_python_plugin
   - name: mypy_grpc
     out: src
