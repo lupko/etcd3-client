@@ -19,18 +19,18 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.9"
 grpcio = ">=1.33.2,<2.0.0"
-protobuf = ">=3.20.0,<5.0.0"
+protobuf = ">=3.20.0,<6.0.0"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "^6.0.0"
-black = "~22.12.0"
+flake8 = "7.0.0"
+black = "~24.4.2"
 isort = "^5.11.4"
-mypy = "1.4.1"
+mypy = "1.10.0"
 
 mock = "~5.1.0"
 pytest = "^7.2.0"
 pytest-cov = "^4.0.0"
-pytest-docker = "~1.0.1"
+pytest-docker = "~3.1.1"
 types-protobuf= "~4.21.0.2"
 
 [tool.pytest.ini_options]

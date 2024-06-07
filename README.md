@@ -126,7 +126,7 @@ With virtual environment activated, you can:
 - Force run all pre-commit checks using `make fix-all` (they are otherwise done automatically during pre-commit hook)
 
 If you want to start an etcd3 cluster for some ad-hoc dev testing, you can navigate to the `tests` directory and do
-`docker-compose up -d`. Just keep in mind that you have to bring this cluster down (`docker-compose down -v`) before
+`docker compose up -d`. Just keep in mind that you have to bring this cluster down (`docker compose down -v`) before
 you run the automated tests.
 
 ## License
