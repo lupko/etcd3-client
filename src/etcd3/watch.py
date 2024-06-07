@@ -136,9 +136,9 @@ class Watcher:
         self._metadata = metadata
 
         self._lock = threading.Lock()
-        self._request_queue: queue.Queue[
-            Union[etcdrpc.WatchRequest, None]
-        ] = queue.Queue(maxsize=10)
+        self._request_queue: queue.Queue[Union[etcdrpc.WatchRequest, None]] = (
+            queue.Queue(maxsize=10)
+        )
 
         self._callbacks: Dict[int, WatchCallback] = dict()
         self._callback_thread: Optional[threading.Thread] = None

@@ -989,9 +989,9 @@ class Etcd3Client:
                   each of which contains a header and a list of events.
                   Use ``cancel`` to cancel the watch request.
         """
-        response_queue: queue.Queue[
-            Union[Exception, WatchResponse, None]
-        ] = queue.Queue()
+        response_queue: queue.Queue[Union[Exception, WatchResponse, None]] = (
+            queue.Queue()
+        )
 
         watch_id = self.add_watch_callback(
             key,
