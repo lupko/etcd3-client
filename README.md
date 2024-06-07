@@ -10,6 +10,17 @@ to the original package.
 
 ## Changelog
 
+### 0.98.0
+
+- No functional changes
+- Move to protobuf 5.27.1
+  - Gencode used in buf.build locked on 5.27.1
+  - Runtime code >= 5.27.1
+- Move to grpcio >= 1.59
+  - First grpcio version to support Python 3.12
+  - Gencode used in buf.build locked on 1.59
+  - Runtime code >= 1.59
+
 ### 0.97.0
 
 - Enhance WatchResponse with method to count events by type
