@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar, Union
 
 import etcd3.rpc as etcdrpc
