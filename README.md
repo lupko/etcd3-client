@@ -10,6 +10,11 @@ to the original package.
 
 ## Changelog
 
+### 0.99.0
+
+- Expanded status() call to include all available information
+  - Also includes cluster_id and member_id from status response's header
+
 ### 0.98.0
 
 - No functional changes
