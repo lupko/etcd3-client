@@ -96,11 +96,26 @@ class Member:
 class Status:
     """etcd cluster status"""
 
+    cluster_id: int
+    """cluster_id is the ID of the cluster which sent the response."""
+
+    member_id: int
+    """member_id is the ID of the member which sent the response."""
+
     version: str
     """version"""
 
+    storage_version: str
+    "version of the db file. It might be get updated with delay in relationship to the target cluster version." ""
+
     db_size: int
     """database size"""
+
+    db_size_in_use: int
+    """size of the backend database logically in use, in bytes, of the responding member."""
+
+    leader_id: int
+    """leader_id is the member ID which the responding member believes is the current leader."""
 
     leader: Optional[Member]
     """leader member; None if cluster has no leader"""
@@ -108,8 +123,14 @@ class Status:
     raft_index: int
     """raft index"""
 
+    raft_applied_index: int
+    """current raft applied index of the responding member."""
+
     raft_term: int
     """raft term"""
+
+    is_learner: bool
+    """indicates if the member is raft learner."""
 
 
 @dataclass(frozen=True)

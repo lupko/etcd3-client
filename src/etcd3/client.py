@@ -843,7 +843,7 @@ class Etcd3Client:
     def status(self, timeout_override: Optional[int] = None) -> Status:
         """Get the status of the responding member."""
         status_request = etcdrpc.StatusRequest()
-        status_response = self.maintenancestub.Status(
+        status_response: etcdrpc.StatusResponse = self.maintenancestub.Status(
             status_request,
             timeout_override or self.timeout,
             credentials=self.call_credentials,
@@ -857,12 +857,21 @@ class Etcd3Client:
         else:
             leader = None
 
+        header = status_response.header
+
         return Status(
-            status_response.version,
-            status_response.dbSize,
-            leader,
-            status_response.raftIndex,
-            status_response.raftTerm,
+            cluster_id=header.cluster_id,
+            member_id=header.member_id,
+            version=status_response.version,
+            storage_version=status_response.storageVersion,
+            db_size=status_response.dbSize,
+            db_size_in_use=status_response.dbSizeInUse,
+            leader=leader,
+            leader_id=status_response.leader,
+            is_learner=status_response.isLearner,
+            raft_index=status_response.raftIndex,
+            raft_applied_index=status_response.raftAppliedIndex,
+            raft_term=status_response.raftTerm,
         )
 
     @_handle_errors
