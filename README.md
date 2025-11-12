@@ -10,6 +10,12 @@ to the original package.
 
 ## Changelog
 
+### 0.100.0
+
+- Enhance WatchResponse with max_mod_revision property
+  - This should be used for purposes of tracking revision high watermark; using WatchResponse's header
+    revision is unsafe for this purpose.
+
 ### 0.99.0
 
 - Expanded status() call to include all available information
