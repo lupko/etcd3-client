@@ -60,6 +60,7 @@ def test_watch_single_key_put(client1, keyspace, collector):
     responses = collector.expect(1)
     assert len(responses) == 1
     assert isinstance(responses[0][0], etcd3.PutEvent)
+    assert responses[0].max_mod_revision == put_response.header.revision
 
     evt = responses[0][0]
 
@@ -100,6 +101,9 @@ def test_watch_single_key_repeated_put(client1, keyspace, collector):
     put1 = responses[0][0]
     put2 = responses[1][0]
 
+    assert responses[0].max_mod_revision == put_response1.header.revision
+    assert responses[1].max_mod_revision == put_response2.header.revision
+
     assert isinstance(put1, etcd3.PutEvent)
     assert isinstance(put2, etcd3.PutEvent)
 
@@ -134,10 +138,12 @@ def test_watch_single_key_noput_filter(client1, keyspace, collector):
     collector.expect_none()
 
     # deletes are not filtered, so they come through
-    client1.delete(key=test_key)
+    deleted, delete_response = client1.delete(key=test_key)
     responses = collector.expect(1)
 
     assert len(responses) == 1
+    assert responses[0].max_mod_revision == delete_response.header.revision
+
     evt = responses[0][0]
 
     assert isinstance(evt, etcd3.DeleteEvent)
@@ -202,10 +208,11 @@ def test_watch_single_key_put_with_lease(client1, keyspace, collector):
     lease = client1.lease(60)
     client1.add_watch_callback(key=test_key, callback=collector.cb)
 
-    client1.put(key=test_key, value=b"test", lease=lease)
+    put_response = client1.put(key=test_key, value=b"test", lease=lease)
 
     responses = collector.expect(1)
     assert len(responses) == 1
+    assert responses[0].max_mod_revision == put_response.header.revision
     assert isinstance(responses[0][0], etcd3.PutEvent)
 
     evt = responses[0][0]
@@ -245,18 +252,17 @@ def test_watch_prefix(client1, keyspace, collector):
         key_prefix=keyspace("test"), callback=collector.cb
     )
 
-    tx = client1.tx
-    client1.transaction(
-        compare=[],
-        success=[
-            tx.put(key=keyspace("test/1"), value=b"test1"),
-            tx.put(key=keyspace("test/2"), value=b"test2"),
-            tx.put(key=keyspace("test/3"), value=b"test3"),
-        ],
-    )
+    tx = etcd3.TransactionBuilder.new()
+    tx.success.put(key=keyspace("test/1"), value=b"test1")
+    tx.success.put(key=keyspace("test/2"), value=b"test2")
+    tx.success.put(key=keyspace("test/3"), value=b"test3")
+
+    tx_response = client1.txn(tx)
 
     response = collector.expect(1)
     assert len(response[0]) == 3
+    assert response[0].max_mod_revision == tx_response.header.revision
+
     assert response[0][0].key == keyspace("test/1")
     assert response[0][1].key == keyspace("test/2")
     assert response[0][2].key == keyspace("test/3")
@@ -276,6 +282,7 @@ def test_watch_response(client1, keyspace):
 
     for response in events:
         assert len(response) == 1
+        assert response.max_mod_revision == put_response.header.revision
         assert isinstance(response[0], etcd3.PutEvent)
         break
 
