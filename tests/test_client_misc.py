@@ -8,8 +8,13 @@ def test_status(client1):
     status = client1.status()
 
     assert len(status.version)
+
+    assert status.cluster_id > 0
+    assert status.member_id > 0
     assert status.leader is not None
     assert status.leader.id > 0
+    assert status.leader_id > 0
+    assert status.leader.id == status.leader_id
     assert status.raft_term > 0
     assert status.raft_index > 0
 

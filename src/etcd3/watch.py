@@ -44,7 +44,22 @@ class WatchResponse:
 
     @property
     def header(self) -> etcdrpc.ResponseHeader:
+        """
+        etcd response header attached to the WatchResponse.
+
+        IMPORTANT: do not use header.revision for purposes of tracking
+        revision high watermark.
+
+        :return: response header
+        """
         return self.watch_response.header
+
+    @property
+    def fragment(self) -> bool:
+        """
+        :return: true if this watch response is a fragment
+        """
+        return self.watch_response.fragment
 
     @property
     def events(self) -> List[Event]:
@@ -78,6 +93,25 @@ class WatchResponse:
                 delete_events += 1
 
         return put_events, delete_events
+
+    @property
+    def max_mod_revision(self) -> Optional[int]:
+        """
+        Gets maximum mod revision found in the events included in this
+        watch response. This method will not materialize event classes.
+
+        HINT: this is suitable for tracking revision high watermark.
+
+
+        :return: None if the watch response is empty
+        """
+        result = -1
+
+        for event in self.watch_response.events:
+            if event.kv.mod_revision > result:
+                result = event.kv.mod_revision
+
+        return result if result > -1 else None
 
     def all(self) -> Generator[Event, None, None]:
         """
