@@ -1,4 +1,4 @@
-FROM bufbuild/buf:1.32.2
+FROM bufbuild/buf:1.61
 
 RUN apk add --update --no-cache \
     python3 \
