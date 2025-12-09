@@ -18,26 +18,31 @@ class KVStub(object):
             "/etcdserverpb.KV/Range",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.RangeRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.RangeResponse.FromString,
+            _registered_method=True,
         )
         self.Put = channel.unary_unary(
             "/etcdserverpb.KV/Put",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.PutRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.PutResponse.FromString,
+            _registered_method=True,
         )
         self.DeleteRange = channel.unary_unary(
             "/etcdserverpb.KV/DeleteRange",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.DeleteRangeRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.DeleteRangeResponse.FromString,
+            _registered_method=True,
         )
         self.Txn = channel.unary_unary(
             "/etcdserverpb.KV/Txn",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.TxnRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.TxnResponse.FromString,
+            _registered_method=True,
         )
         self.Compact = channel.unary_unary(
             "/etcdserverpb.KV/Compact",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.CompactionRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.CompactionResponse.FromString,
+            _registered_method=True,
         )
 
 
@@ -120,6 +125,7 @@ def add_KVServicer_to_server(servicer, server):
         "etcdserverpb.KV", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers("etcdserverpb.KV", rpc_method_handlers)
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -153,6 +159,7 @@ class KV(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -182,6 +189,7 @@ class KV(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -211,6 +219,7 @@ class KV(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -240,6 +249,7 @@ class KV(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -269,6 +279,7 @@ class KV(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
 
@@ -285,6 +296,7 @@ class WatchStub(object):
             "/etcdserverpb.Watch/Watch",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.WatchRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.WatchResponse.FromString,
+            _registered_method=True,
         )
 
 
@@ -315,6 +327,7 @@ def add_WatchServicer_to_server(servicer, server):
         "etcdserverpb.Watch", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers("etcdserverpb.Watch", rpc_method_handlers)
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -348,6 +361,7 @@ class Watch(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
 
@@ -364,26 +378,31 @@ class LeaseStub(object):
             "/etcdserverpb.Lease/LeaseGrant",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseGrantRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseGrantResponse.FromString,
+            _registered_method=True,
         )
         self.LeaseRevoke = channel.unary_unary(
             "/etcdserverpb.Lease/LeaseRevoke",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseRevokeRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseRevokeResponse.FromString,
+            _registered_method=True,
         )
         self.LeaseKeepAlive = channel.stream_stream(
             "/etcdserverpb.Lease/LeaseKeepAlive",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseKeepAliveRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseKeepAliveResponse.FromString,
+            _registered_method=True,
         )
         self.LeaseTimeToLive = channel.unary_unary(
             "/etcdserverpb.Lease/LeaseTimeToLive",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseTimeToLiveRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseTimeToLiveResponse.FromString,
+            _registered_method=True,
         )
         self.LeaseLeases = channel.unary_unary(
             "/etcdserverpb.Lease/LeaseLeases",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseLeasesRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.LeaseLeasesResponse.FromString,
+            _registered_method=True,
         )
 
 
@@ -458,6 +477,7 @@ def add_LeaseServicer_to_server(servicer, server):
         "etcdserverpb.Lease", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers("etcdserverpb.Lease", rpc_method_handlers)
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -491,6 +511,7 @@ class Lease(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -520,6 +541,7 @@ class Lease(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -549,6 +571,7 @@ class Lease(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -578,6 +601,7 @@ class Lease(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -607,6 +631,7 @@ class Lease(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
 
@@ -623,26 +648,31 @@ class ClusterStub(object):
             "/etcdserverpb.Cluster/MemberAdd",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.MemberAddRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.MemberAddResponse.FromString,
+            _registered_method=True,
         )
         self.MemberRemove = channel.unary_unary(
             "/etcdserverpb.Cluster/MemberRemove",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.MemberRemoveRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.MemberRemoveResponse.FromString,
+            _registered_method=True,
         )
         self.MemberUpdate = channel.unary_unary(
             "/etcdserverpb.Cluster/MemberUpdate",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.MemberUpdateRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.MemberUpdateResponse.FromString,
+            _registered_method=True,
         )
         self.MemberList = channel.unary_unary(
             "/etcdserverpb.Cluster/MemberList",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.MemberListRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.MemberListResponse.FromString,
+            _registered_method=True,
         )
         self.MemberPromote = channel.unary_unary(
             "/etcdserverpb.Cluster/MemberPromote",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.MemberPromoteRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.MemberPromoteResponse.FromString,
+            _registered_method=True,
         )
 
 
@@ -712,6 +742,7 @@ def add_ClusterServicer_to_server(servicer, server):
         "etcdserverpb.Cluster", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers("etcdserverpb.Cluster", rpc_method_handlers)
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -745,6 +776,7 @@ class Cluster(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -774,6 +806,7 @@ class Cluster(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -803,6 +836,7 @@ class Cluster(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -832,6 +866,7 @@ class Cluster(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -861,6 +896,7 @@ class Cluster(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
 
@@ -877,41 +913,49 @@ class MaintenanceStub(object):
             "/etcdserverpb.Maintenance/Alarm",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AlarmRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AlarmResponse.FromString,
+            _registered_method=True,
         )
         self.Status = channel.unary_unary(
             "/etcdserverpb.Maintenance/Status",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.StatusRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.StatusResponse.FromString,
+            _registered_method=True,
         )
         self.Defragment = channel.unary_unary(
             "/etcdserverpb.Maintenance/Defragment",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.DefragmentRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.DefragmentResponse.FromString,
+            _registered_method=True,
         )
         self.Hash = channel.unary_unary(
             "/etcdserverpb.Maintenance/Hash",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.HashRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.HashResponse.FromString,
+            _registered_method=True,
         )
         self.HashKV = channel.unary_unary(
             "/etcdserverpb.Maintenance/HashKV",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.HashKVRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.HashKVResponse.FromString,
+            _registered_method=True,
         )
         self.Snapshot = channel.unary_stream(
             "/etcdserverpb.Maintenance/Snapshot",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.SnapshotRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.SnapshotResponse.FromString,
+            _registered_method=True,
         )
         self.MoveLeader = channel.unary_unary(
             "/etcdserverpb.Maintenance/MoveLeader",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.MoveLeaderRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.MoveLeaderResponse.FromString,
+            _registered_method=True,
         )
         self.Downgrade = channel.unary_unary(
             "/etcdserverpb.Maintenance/Downgrade",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.DowngradeRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.DowngradeResponse.FromString,
+            _registered_method=True,
         )
 
 
@@ -1025,6 +1069,9 @@ def add_MaintenanceServicer_to_server(servicer, server):
         "etcdserverpb.Maintenance", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers(
+        "etcdserverpb.Maintenance", rpc_method_handlers
+    )
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -1058,6 +1105,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1087,6 +1135,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1116,6 +1165,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1145,6 +1195,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1174,6 +1225,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1203,6 +1255,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1232,6 +1285,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1261,6 +1315,7 @@ class Maintenance(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
 
@@ -1277,86 +1332,103 @@ class AuthStub(object):
             "/etcdserverpb.Auth/AuthEnable",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthEnableRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthEnableResponse.FromString,
+            _registered_method=True,
         )
         self.AuthDisable = channel.unary_unary(
             "/etcdserverpb.Auth/AuthDisable",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthDisableRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthDisableResponse.FromString,
+            _registered_method=True,
         )
         self.AuthStatus = channel.unary_unary(
             "/etcdserverpb.Auth/AuthStatus",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthStatusRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthStatusResponse.FromString,
+            _registered_method=True,
         )
         self.Authenticate = channel.unary_unary(
             "/etcdserverpb.Auth/Authenticate",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthenticateRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthenticateResponse.FromString,
+            _registered_method=True,
         )
         self.UserAdd = channel.unary_unary(
             "/etcdserverpb.Auth/UserAdd",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserAddRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserAddResponse.FromString,
+            _registered_method=True,
         )
         self.UserGet = channel.unary_unary(
             "/etcdserverpb.Auth/UserGet",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserGetRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserGetResponse.FromString,
+            _registered_method=True,
         )
         self.UserList = channel.unary_unary(
             "/etcdserverpb.Auth/UserList",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserListRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserListResponse.FromString,
+            _registered_method=True,
         )
         self.UserDelete = channel.unary_unary(
             "/etcdserverpb.Auth/UserDelete",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserDeleteRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserDeleteResponse.FromString,
+            _registered_method=True,
         )
         self.UserChangePassword = channel.unary_unary(
             "/etcdserverpb.Auth/UserChangePassword",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserChangePasswordRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserChangePasswordResponse.FromString,
+            _registered_method=True,
         )
         self.UserGrantRole = channel.unary_unary(
             "/etcdserverpb.Auth/UserGrantRole",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserGrantRoleRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserGrantRoleResponse.FromString,
+            _registered_method=True,
         )
         self.UserRevokeRole = channel.unary_unary(
             "/etcdserverpb.Auth/UserRevokeRole",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserRevokeRoleRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthUserRevokeRoleResponse.FromString,
+            _registered_method=True,
         )
         self.RoleAdd = channel.unary_unary(
             "/etcdserverpb.Auth/RoleAdd",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleAddRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleAddResponse.FromString,
+            _registered_method=True,
         )
         self.RoleGet = channel.unary_unary(
             "/etcdserverpb.Auth/RoleGet",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleGetRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleGetResponse.FromString,
+            _registered_method=True,
         )
         self.RoleList = channel.unary_unary(
             "/etcdserverpb.Auth/RoleList",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleListRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleListResponse.FromString,
+            _registered_method=True,
         )
         self.RoleDelete = channel.unary_unary(
             "/etcdserverpb.Auth/RoleDelete",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleDeleteRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleDeleteResponse.FromString,
+            _registered_method=True,
         )
         self.RoleGrantPermission = channel.unary_unary(
             "/etcdserverpb.Auth/RoleGrantPermission",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleGrantPermissionRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleGrantPermissionResponse.FromString,
+            _registered_method=True,
         )
         self.RoleRevokePermission = channel.unary_unary(
             "/etcdserverpb.Auth/RoleRevokePermission",
             request_serializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleRevokePermissionRequest.SerializeToString,
             response_deserializer=etcd3_dot_rpc_dot_rpc__pb2.AuthRoleRevokePermissionResponse.FromString,
+            _registered_method=True,
         )
 
 
@@ -1558,6 +1630,7 @@ def add_AuthServicer_to_server(servicer, server):
         "etcdserverpb.Auth", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers("etcdserverpb.Auth", rpc_method_handlers)
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -1591,6 +1664,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1620,6 +1694,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1649,6 +1724,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1678,6 +1754,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1707,6 +1784,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1736,6 +1814,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1765,6 +1844,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1794,6 +1874,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1823,6 +1904,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1852,6 +1934,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1881,6 +1964,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1910,6 +1994,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1939,6 +2024,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1968,6 +2054,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -1997,6 +2084,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -2026,6 +2114,7 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )
 
     @staticmethod
@@ -2055,4 +2144,5 @@ class Auth(object):
             wait_for_ready,
             timeout,
             metadata,
+            _registered_method=True,
         )

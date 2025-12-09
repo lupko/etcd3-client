@@ -19,3 +19,6 @@ class _MaybeAsyncIterator(
 
 class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore[misc, type-arg]
     ...
+
+GRPC_GENERATED_VERSION: str
+GRPC_VERSION: str

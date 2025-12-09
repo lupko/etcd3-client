@@ -34,7 +34,7 @@ class UserAddOptions(google.protobuf.message.Message):
         self, field_name: typing.Literal["no_password", b"no_password"]
     ) -> None: ...
 
-global___UserAddOptions = UserAddOptions
+Global___UserAddOptions: typing_extensions.TypeAlias = UserAddOptions
 
 @typing.final
 class User(google.protobuf.message.Message):
@@ -55,14 +55,14 @@ class User(google.protobuf.message.Message):
         builtins.str
     ]: ...
     @property
-    def options(self) -> global___UserAddOptions: ...
+    def options(self) -> Global___UserAddOptions: ...
     def __init__(
         self,
         *,
         name: builtins.bytes = ...,
         password: builtins.bytes = ...,
         roles: collections.abc.Iterable[builtins.str] | None = ...,
-        options: global___UserAddOptions | None = ...,
+        options: Global___UserAddOptions | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["options", b"options"]
@@ -81,7 +81,7 @@ class User(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___User = User
+Global___User: typing_extensions.TypeAlias = User
 
 @typing.final
 class Permission(google.protobuf.message.Message):
@@ -112,13 +112,13 @@ class Permission(google.protobuf.message.Message):
     PERMTYPE_FIELD_NUMBER: builtins.int
     KEY_FIELD_NUMBER: builtins.int
     RANGE_END_FIELD_NUMBER: builtins.int
-    permType: global___Permission.Type.ValueType
+    permType: Global___Permission.Type.ValueType
     key: builtins.bytes
     range_end: builtins.bytes
     def __init__(
         self,
         *,
-        permType: global___Permission.Type.ValueType = ...,
+        permType: Global___Permission.Type.ValueType = ...,
         key: builtins.bytes = ...,
         range_end: builtins.bytes = ...,
     ) -> None: ...
@@ -129,7 +129,7 @@ class Permission(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___Permission = Permission
+Global___Permission: typing_extensions.TypeAlias = Permission
 
 @typing.final
 class Role(google.protobuf.message.Message):
@@ -144,17 +144,17 @@ class Role(google.protobuf.message.Message):
     def keyPermission(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Permission
+        Global___Permission
     ]: ...
     def __init__(
         self,
         *,
         name: builtins.bytes = ...,
-        keyPermission: collections.abc.Iterable[global___Permission] | None = ...,
+        keyPermission: collections.abc.Iterable[Global___Permission] | None = ...,
     ) -> None: ...
     def ClearField(
         self,
         field_name: typing.Literal["keyPermission", b"keyPermission", "name", b"name"],
     ) -> None: ...
 
-global___Role = Role
+Global___Role: typing_extensions.TypeAlias = Role

@@ -8,7 +8,13 @@ import collections.abc
 import etcd3.rpc.rpc_pb2
 import grpc
 import grpc.aio
+import sys
 import typing
+
+if sys.version_info >= (3, 13):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 _T = typing.TypeVar("_T")
 
@@ -21,96 +27,196 @@ class _MaybeAsyncIterator(
 class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore[misc, type-arg]
     ...
 
-class KVStub:
+GRPC_GENERATED_VERSION: str
+GRPC_VERSION: str
+_KVRangeType = typing_extensions.TypeVar(
+    "_KVRangeType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.RangeRequest,
+        etcd3.rpc.rpc_pb2.RangeResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.RangeRequest,
+        etcd3.rpc.rpc_pb2.RangeResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.RangeRequest,
+        etcd3.rpc.rpc_pb2.RangeResponse,
+    ],
+)
+
+_KVPutType = typing_extensions.TypeVar(
+    "_KVPutType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.PutRequest,
+        etcd3.rpc.rpc_pb2.PutResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.PutRequest,
+        etcd3.rpc.rpc_pb2.PutResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.PutRequest,
+        etcd3.rpc.rpc_pb2.PutResponse,
+    ],
+)
+
+_KVDeleteRangeType = typing_extensions.TypeVar(
+    "_KVDeleteRangeType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DeleteRangeRequest,
+        etcd3.rpc.rpc_pb2.DeleteRangeResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DeleteRangeRequest,
+        etcd3.rpc.rpc_pb2.DeleteRangeResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DeleteRangeRequest,
+        etcd3.rpc.rpc_pb2.DeleteRangeResponse,
+    ],
+)
+
+_KVTxnType = typing_extensions.TypeVar(
+    "_KVTxnType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.TxnRequest,
+        etcd3.rpc.rpc_pb2.TxnResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.TxnRequest,
+        etcd3.rpc.rpc_pb2.TxnResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.TxnRequest,
+        etcd3.rpc.rpc_pb2.TxnResponse,
+    ],
+)
+
+_KVCompactType = typing_extensions.TypeVar(
+    "_KVCompactType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.CompactionRequest,
+        etcd3.rpc.rpc_pb2.CompactionResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.CompactionRequest,
+        etcd3.rpc.rpc_pb2.CompactionResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.CompactionRequest,
+        etcd3.rpc.rpc_pb2.CompactionResponse,
+    ],
+)
+
+class KVStub(
+    typing.Generic[
+        _KVRangeType, _KVPutType, _KVDeleteRangeType, _KVTxnType, _KVCompactType
+    ]
+):
+    @typing.overload
     def __init__(
-        self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]
+        self: KVStub[
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.RangeRequest,
+                etcd3.rpc.rpc_pb2.RangeResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.PutRequest,
+                etcd3.rpc.rpc_pb2.PutResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.DeleteRangeRequest,
+                etcd3.rpc.rpc_pb2.DeleteRangeResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.TxnRequest,
+                etcd3.rpc.rpc_pb2.TxnResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.CompactionRequest,
+                etcd3.rpc.rpc_pb2.CompactionResponse,
+            ],
+        ],
+        channel: grpc.Channel,
     ) -> None: ...
-    Range: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.RangeRequest,
-        etcd3.rpc.rpc_pb2.RangeResponse,
-    ]
+    @typing.overload
+    def __init__(
+        self: KVStub[
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.RangeRequest,
+                etcd3.rpc.rpc_pb2.RangeResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.PutRequest,
+                etcd3.rpc.rpc_pb2.PutResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.DeleteRangeRequest,
+                etcd3.rpc.rpc_pb2.DeleteRangeResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.TxnRequest,
+                etcd3.rpc.rpc_pb2.TxnResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.CompactionRequest,
+                etcd3.rpc.rpc_pb2.CompactionResponse,
+            ],
+        ],
+        channel: grpc.aio.Channel,
+    ) -> None: ...
+
+    Range: _KVRangeType
     """Range gets the keys in the range from the key-value store."""
 
-    Put: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.PutRequest,
-        etcd3.rpc.rpc_pb2.PutResponse,
-    ]
+    Put: _KVPutType
     """Put puts the given key into the key-value store.
     A put request increments the revision of the key-value store
     and generates one event in the event history.
     """
 
-    DeleteRange: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.DeleteRangeRequest,
-        etcd3.rpc.rpc_pb2.DeleteRangeResponse,
-    ]
+    DeleteRange: _KVDeleteRangeType
     """DeleteRange deletes the given range from the key-value store.
     A delete request increments the revision of the key-value store
     and generates a delete event in the event history for every deleted key.
     """
 
-    Txn: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.TxnRequest,
-        etcd3.rpc.rpc_pb2.TxnResponse,
-    ]
+    Txn: _KVTxnType
     """Txn processes multiple requests in a single transaction.
     A txn request increments the revision of the key-value store
     and generates events with the same revision for every completed request.
     It is not allowed to modify the same key several times within one txn.
     """
 
-    Compact: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.CompactionRequest,
-        etcd3.rpc.rpc_pb2.CompactionResponse,
-    ]
+    Compact: _KVCompactType
     """Compact compacts the event history in the etcd key-value store. The key-value
     store should be periodically compacted or the event history will continue to grow
     indefinitely.
     """
 
-class KVAsyncStub:
-    Range: grpc.aio.UnaryUnaryMultiCallable[
+KVAsyncStub: typing_extensions.TypeAlias = KVStub[
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.RangeRequest,
         etcd3.rpc.rpc_pb2.RangeResponse,
-    ]
-    """Range gets the keys in the range from the key-value store."""
-
-    Put: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.PutRequest,
         etcd3.rpc.rpc_pb2.PutResponse,
-    ]
-    """Put puts the given key into the key-value store.
-    A put request increments the revision of the key-value store
-    and generates one event in the event history.
-    """
-
-    DeleteRange: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.DeleteRangeRequest,
         etcd3.rpc.rpc_pb2.DeleteRangeResponse,
-    ]
-    """DeleteRange deletes the given range from the key-value store.
-    A delete request increments the revision of the key-value store
-    and generates a delete event in the event history for every deleted key.
-    """
-
-    Txn: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.TxnRequest,
         etcd3.rpc.rpc_pb2.TxnResponse,
-    ]
-    """Txn processes multiple requests in a single transaction.
-    A txn request increments the revision of the key-value store
-    and generates events with the same revision for every completed request.
-    It is not allowed to modify the same key several times within one txn.
-    """
-
-    Compact: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.CompactionRequest,
         etcd3.rpc.rpc_pb2.CompactionResponse,
-    ]
-    """Compact compacts the event history in the etcd key-value store. The key-value
-    store should be periodically compacted or the event history will continue to grow
-    indefinitely.
-    """
+    ],
+]
 
 class KVServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -185,14 +291,45 @@ def add_KVServicer_to_server(
     servicer: KVServicer, server: typing.Union[grpc.Server, grpc.aio.Server]
 ) -> None: ...
 
-class WatchStub:
-    def __init__(
-        self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]
-    ) -> None: ...
-    Watch: grpc.StreamStreamMultiCallable[
+_WatchWatchType = typing_extensions.TypeVar(
+    "_WatchWatchType",
+    grpc.StreamStreamMultiCallable[
         etcd3.rpc.rpc_pb2.WatchRequest,
         etcd3.rpc.rpc_pb2.WatchResponse,
-    ]
+    ],
+    grpc.aio.StreamStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.WatchRequest,
+        etcd3.rpc.rpc_pb2.WatchResponse,
+    ],
+    default=grpc.StreamStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.WatchRequest,
+        etcd3.rpc.rpc_pb2.WatchResponse,
+    ],
+)
+
+class WatchStub(typing.Generic[_WatchWatchType]):
+    @typing.overload
+    def __init__(
+        self: WatchStub[
+            grpc.StreamStreamMultiCallable[
+                etcd3.rpc.rpc_pb2.WatchRequest,
+                etcd3.rpc.rpc_pb2.WatchResponse,
+            ],
+        ],
+        channel: grpc.Channel,
+    ) -> None: ...
+    @typing.overload
+    def __init__(
+        self: WatchStub[
+            grpc.aio.StreamStreamMultiCallable[
+                etcd3.rpc.rpc_pb2.WatchRequest,
+                etcd3.rpc.rpc_pb2.WatchResponse,
+            ],
+        ],
+        channel: grpc.aio.Channel,
+    ) -> None: ...
+
+    Watch: _WatchWatchType
     """Watch watches for events happening or that have happened. Both input and output
     are streams; the input stream is for creating and canceling watchers and the output
     stream sends events. One watch RPC can watch on multiple key ranges, streaming events
@@ -200,17 +337,12 @@ class WatchStub:
     last compaction revision.
     """
 
-class WatchAsyncStub:
-    Watch: grpc.aio.StreamStreamMultiCallable[
+WatchAsyncStub: typing_extensions.TypeAlias = WatchStub[
+    grpc.aio.StreamStreamMultiCallable[
         etcd3.rpc.rpc_pb2.WatchRequest,
         etcd3.rpc.rpc_pb2.WatchResponse,
-    ]
-    """Watch watches for events happening or that have happened. Both input and output
-    are streams; the input stream is for creating and canceling watchers and the output
-    stream sends events. One watch RPC can watch on multiple key ranges, streaming events
-    for several watches at once. The entire event history can be watched starting from the
-    last compaction revision.
-    """
+    ],
+]
 
 class WatchServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -233,80 +365,190 @@ def add_WatchServicer_to_server(
     servicer: WatchServicer, server: typing.Union[grpc.Server, grpc.aio.Server]
 ) -> None: ...
 
-class LeaseStub:
+_LeaseLeaseGrantType = typing_extensions.TypeVar(
+    "_LeaseLeaseGrantType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseGrantRequest,
+        etcd3.rpc.rpc_pb2.LeaseGrantResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseGrantRequest,
+        etcd3.rpc.rpc_pb2.LeaseGrantResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseGrantRequest,
+        etcd3.rpc.rpc_pb2.LeaseGrantResponse,
+    ],
+)
+
+_LeaseLeaseRevokeType = typing_extensions.TypeVar(
+    "_LeaseLeaseRevokeType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
+        etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
+        etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
+        etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
+    ],
+)
+
+_LeaseLeaseKeepAliveType = typing_extensions.TypeVar(
+    "_LeaseLeaseKeepAliveType",
+    grpc.StreamStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
+        etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
+    ],
+    grpc.aio.StreamStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
+        etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
+    ],
+    default=grpc.StreamStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
+        etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
+    ],
+)
+
+_LeaseLeaseTimeToLiveType = typing_extensions.TypeVar(
+    "_LeaseLeaseTimeToLiveType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
+        etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
+        etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
+        etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
+    ],
+)
+
+_LeaseLeaseLeasesType = typing_extensions.TypeVar(
+    "_LeaseLeaseLeasesType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
+        etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
+        etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
+        etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
+    ],
+)
+
+class LeaseStub(
+    typing.Generic[
+        _LeaseLeaseGrantType,
+        _LeaseLeaseRevokeType,
+        _LeaseLeaseKeepAliveType,
+        _LeaseLeaseTimeToLiveType,
+        _LeaseLeaseLeasesType,
+    ]
+):
+    @typing.overload
     def __init__(
-        self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]
+        self: LeaseStub[
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseGrantRequest,
+                etcd3.rpc.rpc_pb2.LeaseGrantResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
+                etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
+            ],
+            grpc.StreamStreamMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
+                etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
+                etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
+                etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
+            ],
+        ],
+        channel: grpc.Channel,
     ) -> None: ...
-    LeaseGrant: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.LeaseGrantRequest,
-        etcd3.rpc.rpc_pb2.LeaseGrantResponse,
-    ]
+    @typing.overload
+    def __init__(
+        self: LeaseStub[
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseGrantRequest,
+                etcd3.rpc.rpc_pb2.LeaseGrantResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
+                etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
+            ],
+            grpc.aio.StreamStreamMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
+                etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
+                etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
+                etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
+            ],
+        ],
+        channel: grpc.aio.Channel,
+    ) -> None: ...
+
+    LeaseGrant: _LeaseLeaseGrantType
     """LeaseGrant creates a lease which expires if the server does not receive a keepAlive
     within a given time to live period. All keys attached to the lease will be expired and
     deleted if the lease expires. Each expired key generates a delete event in the event history.
     """
 
-    LeaseRevoke: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
-        etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
-    ]
+    LeaseRevoke: _LeaseLeaseRevokeType
     """LeaseRevoke revokes a lease. All keys attached to the lease will expire and be deleted."""
 
-    LeaseKeepAlive: grpc.StreamStreamMultiCallable[
-        etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
-        etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
-    ]
+    LeaseKeepAlive: _LeaseLeaseKeepAliveType
     """LeaseKeepAlive keeps the lease alive by streaming keep alive requests from the client
     to the server and streaming keep alive responses from the server to the client.
     """
 
-    LeaseTimeToLive: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
-        etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
-    ]
+    LeaseTimeToLive: _LeaseLeaseTimeToLiveType
     """LeaseTimeToLive retrieves lease information."""
 
-    LeaseLeases: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
-        etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
-    ]
+    LeaseLeases: _LeaseLeaseLeasesType
     """LeaseLeases lists all existing leases."""
 
-class LeaseAsyncStub:
-    LeaseGrant: grpc.aio.UnaryUnaryMultiCallable[
+LeaseAsyncStub: typing_extensions.TypeAlias = LeaseStub[
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.LeaseGrantRequest,
         etcd3.rpc.rpc_pb2.LeaseGrantResponse,
-    ]
-    """LeaseGrant creates a lease which expires if the server does not receive a keepAlive
-    within a given time to live period. All keys attached to the lease will be expired and
-    deleted if the lease expires. Each expired key generates a delete event in the event history.
-    """
-
-    LeaseRevoke: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.LeaseRevokeRequest,
         etcd3.rpc.rpc_pb2.LeaseRevokeResponse,
-    ]
-    """LeaseRevoke revokes a lease. All keys attached to the lease will expire and be deleted."""
-
-    LeaseKeepAlive: grpc.aio.StreamStreamMultiCallable[
+    ],
+    grpc.aio.StreamStreamMultiCallable[
         etcd3.rpc.rpc_pb2.LeaseKeepAliveRequest,
         etcd3.rpc.rpc_pb2.LeaseKeepAliveResponse,
-    ]
-    """LeaseKeepAlive keeps the lease alive by streaming keep alive requests from the client
-    to the server and streaming keep alive responses from the server to the client.
-    """
-
-    LeaseTimeToLive: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.LeaseTimeToLiveRequest,
         etcd3.rpc.rpc_pb2.LeaseTimeToLiveResponse,
-    ]
-    """LeaseTimeToLive retrieves lease information."""
-
-    LeaseLeases: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.LeaseLeasesRequest,
         etcd3.rpc.rpc_pb2.LeaseLeasesResponse,
-    ]
-    """LeaseLeases lists all existing leases."""
+    ],
+]
 
 class LeaseServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -373,70 +615,185 @@ def add_LeaseServicer_to_server(
     servicer: LeaseServicer, server: typing.Union[grpc.Server, grpc.aio.Server]
 ) -> None: ...
 
-class ClusterStub:
+_ClusterMemberAddType = typing_extensions.TypeVar(
+    "_ClusterMemberAddType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberAddRequest,
+        etcd3.rpc.rpc_pb2.MemberAddResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberAddRequest,
+        etcd3.rpc.rpc_pb2.MemberAddResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberAddRequest,
+        etcd3.rpc.rpc_pb2.MemberAddResponse,
+    ],
+)
+
+_ClusterMemberRemoveType = typing_extensions.TypeVar(
+    "_ClusterMemberRemoveType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberRemoveRequest,
+        etcd3.rpc.rpc_pb2.MemberRemoveResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberRemoveRequest,
+        etcd3.rpc.rpc_pb2.MemberRemoveResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberRemoveRequest,
+        etcd3.rpc.rpc_pb2.MemberRemoveResponse,
+    ],
+)
+
+_ClusterMemberUpdateType = typing_extensions.TypeVar(
+    "_ClusterMemberUpdateType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberUpdateRequest,
+        etcd3.rpc.rpc_pb2.MemberUpdateResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberUpdateRequest,
+        etcd3.rpc.rpc_pb2.MemberUpdateResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberUpdateRequest,
+        etcd3.rpc.rpc_pb2.MemberUpdateResponse,
+    ],
+)
+
+_ClusterMemberListType = typing_extensions.TypeVar(
+    "_ClusterMemberListType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberListRequest,
+        etcd3.rpc.rpc_pb2.MemberListResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberListRequest,
+        etcd3.rpc.rpc_pb2.MemberListResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberListRequest,
+        etcd3.rpc.rpc_pb2.MemberListResponse,
+    ],
+)
+
+_ClusterMemberPromoteType = typing_extensions.TypeVar(
+    "_ClusterMemberPromoteType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberPromoteRequest,
+        etcd3.rpc.rpc_pb2.MemberPromoteResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberPromoteRequest,
+        etcd3.rpc.rpc_pb2.MemberPromoteResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MemberPromoteRequest,
+        etcd3.rpc.rpc_pb2.MemberPromoteResponse,
+    ],
+)
+
+class ClusterStub(
+    typing.Generic[
+        _ClusterMemberAddType,
+        _ClusterMemberRemoveType,
+        _ClusterMemberUpdateType,
+        _ClusterMemberListType,
+        _ClusterMemberPromoteType,
+    ]
+):
+    @typing.overload
     def __init__(
-        self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]
+        self: ClusterStub[
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberAddRequest,
+                etcd3.rpc.rpc_pb2.MemberAddResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberRemoveRequest,
+                etcd3.rpc.rpc_pb2.MemberRemoveResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberUpdateRequest,
+                etcd3.rpc.rpc_pb2.MemberUpdateResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberListRequest,
+                etcd3.rpc.rpc_pb2.MemberListResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberPromoteRequest,
+                etcd3.rpc.rpc_pb2.MemberPromoteResponse,
+            ],
+        ],
+        channel: grpc.Channel,
     ) -> None: ...
-    MemberAdd: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.MemberAddRequest,
-        etcd3.rpc.rpc_pb2.MemberAddResponse,
-    ]
+    @typing.overload
+    def __init__(
+        self: ClusterStub[
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberAddRequest,
+                etcd3.rpc.rpc_pb2.MemberAddResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberRemoveRequest,
+                etcd3.rpc.rpc_pb2.MemberRemoveResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberUpdateRequest,
+                etcd3.rpc.rpc_pb2.MemberUpdateResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberListRequest,
+                etcd3.rpc.rpc_pb2.MemberListResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MemberPromoteRequest,
+                etcd3.rpc.rpc_pb2.MemberPromoteResponse,
+            ],
+        ],
+        channel: grpc.aio.Channel,
+    ) -> None: ...
+
+    MemberAdd: _ClusterMemberAddType
     """MemberAdd adds a member into the cluster."""
 
-    MemberRemove: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.MemberRemoveRequest,
-        etcd3.rpc.rpc_pb2.MemberRemoveResponse,
-    ]
+    MemberRemove: _ClusterMemberRemoveType
     """MemberRemove removes an existing member from the cluster."""
 
-    MemberUpdate: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.MemberUpdateRequest,
-        etcd3.rpc.rpc_pb2.MemberUpdateResponse,
-    ]
+    MemberUpdate: _ClusterMemberUpdateType
     """MemberUpdate updates the member configuration."""
 
-    MemberList: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.MemberListRequest,
-        etcd3.rpc.rpc_pb2.MemberListResponse,
-    ]
+    MemberList: _ClusterMemberListType
     """MemberList lists all the members in the cluster."""
 
-    MemberPromote: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.MemberPromoteRequest,
-        etcd3.rpc.rpc_pb2.MemberPromoteResponse,
-    ]
+    MemberPromote: _ClusterMemberPromoteType
     """MemberPromote promotes a member from raft learner (non-voting) to raft voting member."""
 
-class ClusterAsyncStub:
-    MemberAdd: grpc.aio.UnaryUnaryMultiCallable[
+ClusterAsyncStub: typing_extensions.TypeAlias = ClusterStub[
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.MemberAddRequest,
         etcd3.rpc.rpc_pb2.MemberAddResponse,
-    ]
-    """MemberAdd adds a member into the cluster."""
-
-    MemberRemove: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.MemberRemoveRequest,
         etcd3.rpc.rpc_pb2.MemberRemoveResponse,
-    ]
-    """MemberRemove removes an existing member from the cluster."""
-
-    MemberUpdate: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.MemberUpdateRequest,
         etcd3.rpc.rpc_pb2.MemberUpdateResponse,
-    ]
-    """MemberUpdate updates the member configuration."""
-
-    MemberList: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.MemberListRequest,
         etcd3.rpc.rpc_pb2.MemberListResponse,
-    ]
-    """MemberList lists all the members in the cluster."""
-
-    MemberPromote: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.MemberPromoteRequest,
         etcd3.rpc.rpc_pb2.MemberPromoteResponse,
-    ]
-    """MemberPromote promotes a member from raft learner (non-voting) to raft voting member."""
+    ],
+]
 
 class ClusterServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -498,32 +855,233 @@ def add_ClusterServicer_to_server(
     servicer: ClusterServicer, server: typing.Union[grpc.Server, grpc.aio.Server]
 ) -> None: ...
 
-class MaintenanceStub:
+_MaintenanceAlarmType = typing_extensions.TypeVar(
+    "_MaintenanceAlarmType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AlarmRequest,
+        etcd3.rpc.rpc_pb2.AlarmResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AlarmRequest,
+        etcd3.rpc.rpc_pb2.AlarmResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AlarmRequest,
+        etcd3.rpc.rpc_pb2.AlarmResponse,
+    ],
+)
+
+_MaintenanceStatusType = typing_extensions.TypeVar(
+    "_MaintenanceStatusType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.StatusRequest,
+        etcd3.rpc.rpc_pb2.StatusResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.StatusRequest,
+        etcd3.rpc.rpc_pb2.StatusResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.StatusRequest,
+        etcd3.rpc.rpc_pb2.StatusResponse,
+    ],
+)
+
+_MaintenanceDefragmentType = typing_extensions.TypeVar(
+    "_MaintenanceDefragmentType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DefragmentRequest,
+        etcd3.rpc.rpc_pb2.DefragmentResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DefragmentRequest,
+        etcd3.rpc.rpc_pb2.DefragmentResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DefragmentRequest,
+        etcd3.rpc.rpc_pb2.DefragmentResponse,
+    ],
+)
+
+_MaintenanceHashType = typing_extensions.TypeVar(
+    "_MaintenanceHashType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.HashRequest,
+        etcd3.rpc.rpc_pb2.HashResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.HashRequest,
+        etcd3.rpc.rpc_pb2.HashResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.HashRequest,
+        etcd3.rpc.rpc_pb2.HashResponse,
+    ],
+)
+
+_MaintenanceHashKVType = typing_extensions.TypeVar(
+    "_MaintenanceHashKVType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.HashKVRequest,
+        etcd3.rpc.rpc_pb2.HashKVResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.HashKVRequest,
+        etcd3.rpc.rpc_pb2.HashKVResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.HashKVRequest,
+        etcd3.rpc.rpc_pb2.HashKVResponse,
+    ],
+)
+
+_MaintenanceSnapshotType = typing_extensions.TypeVar(
+    "_MaintenanceSnapshotType",
+    grpc.UnaryStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.SnapshotRequest,
+        etcd3.rpc.rpc_pb2.SnapshotResponse,
+    ],
+    grpc.aio.UnaryStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.SnapshotRequest,
+        etcd3.rpc.rpc_pb2.SnapshotResponse,
+    ],
+    default=grpc.UnaryStreamMultiCallable[
+        etcd3.rpc.rpc_pb2.SnapshotRequest,
+        etcd3.rpc.rpc_pb2.SnapshotResponse,
+    ],
+)
+
+_MaintenanceMoveLeaderType = typing_extensions.TypeVar(
+    "_MaintenanceMoveLeaderType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MoveLeaderRequest,
+        etcd3.rpc.rpc_pb2.MoveLeaderResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MoveLeaderRequest,
+        etcd3.rpc.rpc_pb2.MoveLeaderResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.MoveLeaderRequest,
+        etcd3.rpc.rpc_pb2.MoveLeaderResponse,
+    ],
+)
+
+_MaintenanceDowngradeType = typing_extensions.TypeVar(
+    "_MaintenanceDowngradeType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DowngradeRequest,
+        etcd3.rpc.rpc_pb2.DowngradeResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DowngradeRequest,
+        etcd3.rpc.rpc_pb2.DowngradeResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.DowngradeRequest,
+        etcd3.rpc.rpc_pb2.DowngradeResponse,
+    ],
+)
+
+class MaintenanceStub(
+    typing.Generic[
+        _MaintenanceAlarmType,
+        _MaintenanceStatusType,
+        _MaintenanceDefragmentType,
+        _MaintenanceHashType,
+        _MaintenanceHashKVType,
+        _MaintenanceSnapshotType,
+        _MaintenanceMoveLeaderType,
+        _MaintenanceDowngradeType,
+    ]
+):
+    @typing.overload
     def __init__(
-        self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]
+        self: MaintenanceStub[
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AlarmRequest,
+                etcd3.rpc.rpc_pb2.AlarmResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.StatusRequest,
+                etcd3.rpc.rpc_pb2.StatusResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.DefragmentRequest,
+                etcd3.rpc.rpc_pb2.DefragmentResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.HashRequest,
+                etcd3.rpc.rpc_pb2.HashResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.HashKVRequest,
+                etcd3.rpc.rpc_pb2.HashKVResponse,
+            ],
+            grpc.UnaryStreamMultiCallable[
+                etcd3.rpc.rpc_pb2.SnapshotRequest,
+                etcd3.rpc.rpc_pb2.SnapshotResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MoveLeaderRequest,
+                etcd3.rpc.rpc_pb2.MoveLeaderResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.DowngradeRequest,
+                etcd3.rpc.rpc_pb2.DowngradeResponse,
+            ],
+        ],
+        channel: grpc.Channel,
     ) -> None: ...
-    Alarm: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AlarmRequest,
-        etcd3.rpc.rpc_pb2.AlarmResponse,
-    ]
+    @typing.overload
+    def __init__(
+        self: MaintenanceStub[
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AlarmRequest,
+                etcd3.rpc.rpc_pb2.AlarmResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.StatusRequest,
+                etcd3.rpc.rpc_pb2.StatusResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.DefragmentRequest,
+                etcd3.rpc.rpc_pb2.DefragmentResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.HashRequest,
+                etcd3.rpc.rpc_pb2.HashResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.HashKVRequest,
+                etcd3.rpc.rpc_pb2.HashKVResponse,
+            ],
+            grpc.aio.UnaryStreamMultiCallable[
+                etcd3.rpc.rpc_pb2.SnapshotRequest,
+                etcd3.rpc.rpc_pb2.SnapshotResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.MoveLeaderRequest,
+                etcd3.rpc.rpc_pb2.MoveLeaderResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.DowngradeRequest,
+                etcd3.rpc.rpc_pb2.DowngradeResponse,
+            ],
+        ],
+        channel: grpc.aio.Channel,
+    ) -> None: ...
+
+    Alarm: _MaintenanceAlarmType
     """Alarm activates, deactivates, and queries alarms regarding cluster health."""
 
-    Status: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.StatusRequest,
-        etcd3.rpc.rpc_pb2.StatusResponse,
-    ]
+    Status: _MaintenanceStatusType
     """Status gets the status of the member."""
 
-    Defragment: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.DefragmentRequest,
-        etcd3.rpc.rpc_pb2.DefragmentResponse,
-    ]
+    Defragment: _MaintenanceDefragmentType
     """Defragment defragments a member's backend database to recover storage space."""
 
-    Hash: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.HashRequest,
-        etcd3.rpc.rpc_pb2.HashResponse,
-    ]
+    Hash: _MaintenanceHashType
     """Hash computes the hash of whole backend keyspace,
     including key, lease, and other buckets in storage.
     This is designed for testing ONLY!
@@ -532,94 +1090,57 @@ class MaintenanceStub:
     Use "HashKV" API instead for "key" bucket consistency checks.
     """
 
-    HashKV: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.HashKVRequest,
-        etcd3.rpc.rpc_pb2.HashKVResponse,
-    ]
+    HashKV: _MaintenanceHashKVType
     """HashKV computes the hash of all MVCC keys up to a given revision.
     It only iterates "key" bucket in backend storage.
     """
 
-    Snapshot: grpc.UnaryStreamMultiCallable[
-        etcd3.rpc.rpc_pb2.SnapshotRequest,
-        etcd3.rpc.rpc_pb2.SnapshotResponse,
-    ]
+    Snapshot: _MaintenanceSnapshotType
     """Snapshot sends a snapshot of the entire backend from a member over a stream to a client."""
 
-    MoveLeader: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.MoveLeaderRequest,
-        etcd3.rpc.rpc_pb2.MoveLeaderResponse,
-    ]
+    MoveLeader: _MaintenanceMoveLeaderType
     """MoveLeader requests current leader node to transfer its leadership to transferee."""
 
-    Downgrade: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.DowngradeRequest,
-        etcd3.rpc.rpc_pb2.DowngradeResponse,
-    ]
+    Downgrade: _MaintenanceDowngradeType
     """Downgrade requests downgrades, verifies feasibility or cancels downgrade
     on the cluster version.
     Supported since etcd 3.5.
     """
 
-class MaintenanceAsyncStub:
-    Alarm: grpc.aio.UnaryUnaryMultiCallable[
+MaintenanceAsyncStub: typing_extensions.TypeAlias = MaintenanceStub[
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AlarmRequest,
         etcd3.rpc.rpc_pb2.AlarmResponse,
-    ]
-    """Alarm activates, deactivates, and queries alarms regarding cluster health."""
-
-    Status: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.StatusRequest,
         etcd3.rpc.rpc_pb2.StatusResponse,
-    ]
-    """Status gets the status of the member."""
-
-    Defragment: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.DefragmentRequest,
         etcd3.rpc.rpc_pb2.DefragmentResponse,
-    ]
-    """Defragment defragments a member's backend database to recover storage space."""
-
-    Hash: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.HashRequest,
         etcd3.rpc.rpc_pb2.HashResponse,
-    ]
-    """Hash computes the hash of whole backend keyspace,
-    including key, lease, and other buckets in storage.
-    This is designed for testing ONLY!
-    Do not rely on this in production with ongoing transactions,
-    since Hash operation does not hold MVCC locks.
-    Use "HashKV" API instead for "key" bucket consistency checks.
-    """
-
-    HashKV: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.HashKVRequest,
         etcd3.rpc.rpc_pb2.HashKVResponse,
-    ]
-    """HashKV computes the hash of all MVCC keys up to a given revision.
-    It only iterates "key" bucket in backend storage.
-    """
-
-    Snapshot: grpc.aio.UnaryStreamMultiCallable[
+    ],
+    grpc.aio.UnaryStreamMultiCallable[
         etcd3.rpc.rpc_pb2.SnapshotRequest,
         etcd3.rpc.rpc_pb2.SnapshotResponse,
-    ]
-    """Snapshot sends a snapshot of the entire backend from a member over a stream to a client."""
-
-    MoveLeader: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.MoveLeaderRequest,
         etcd3.rpc.rpc_pb2.MoveLeaderResponse,
-    ]
-    """MoveLeader requests current leader node to transfer its leadership to transferee."""
-
-    Downgrade: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.DowngradeRequest,
         etcd3.rpc.rpc_pb2.DowngradeResponse,
-    ]
-    """Downgrade requests downgrades, verifies feasibility or cancels downgrade
-    on the cluster version.
-    Supported since etcd 3.5.
-    """
+    ],
+]
 
 class MaintenanceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -725,214 +1246,569 @@ def add_MaintenanceServicer_to_server(
     servicer: MaintenanceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]
 ) -> None: ...
 
-class AuthStub:
+_AuthAuthEnableType = typing_extensions.TypeVar(
+    "_AuthAuthEnableType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthEnableRequest,
+        etcd3.rpc.rpc_pb2.AuthEnableResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthEnableRequest,
+        etcd3.rpc.rpc_pb2.AuthEnableResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthEnableRequest,
+        etcd3.rpc.rpc_pb2.AuthEnableResponse,
+    ],
+)
+
+_AuthAuthDisableType = typing_extensions.TypeVar(
+    "_AuthAuthDisableType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthDisableRequest,
+        etcd3.rpc.rpc_pb2.AuthDisableResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthDisableRequest,
+        etcd3.rpc.rpc_pb2.AuthDisableResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthDisableRequest,
+        etcd3.rpc.rpc_pb2.AuthDisableResponse,
+    ],
+)
+
+_AuthAuthStatusType = typing_extensions.TypeVar(
+    "_AuthAuthStatusType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthStatusRequest,
+        etcd3.rpc.rpc_pb2.AuthStatusResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthStatusRequest,
+        etcd3.rpc.rpc_pb2.AuthStatusResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthStatusRequest,
+        etcd3.rpc.rpc_pb2.AuthStatusResponse,
+    ],
+)
+
+_AuthAuthenticateType = typing_extensions.TypeVar(
+    "_AuthAuthenticateType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthenticateRequest,
+        etcd3.rpc.rpc_pb2.AuthenticateResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthenticateRequest,
+        etcd3.rpc.rpc_pb2.AuthenticateResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthenticateRequest,
+        etcd3.rpc.rpc_pb2.AuthenticateResponse,
+    ],
+)
+
+_AuthUserAddType = typing_extensions.TypeVar(
+    "_AuthUserAddType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserAddRequest,
+        etcd3.rpc.rpc_pb2.AuthUserAddResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserAddRequest,
+        etcd3.rpc.rpc_pb2.AuthUserAddResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserAddRequest,
+        etcd3.rpc.rpc_pb2.AuthUserAddResponse,
+    ],
+)
+
+_AuthUserGetType = typing_extensions.TypeVar(
+    "_AuthUserGetType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserGetRequest,
+        etcd3.rpc.rpc_pb2.AuthUserGetResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserGetRequest,
+        etcd3.rpc.rpc_pb2.AuthUserGetResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserGetRequest,
+        etcd3.rpc.rpc_pb2.AuthUserGetResponse,
+    ],
+)
+
+_AuthUserListType = typing_extensions.TypeVar(
+    "_AuthUserListType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserListRequest,
+        etcd3.rpc.rpc_pb2.AuthUserListResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserListRequest,
+        etcd3.rpc.rpc_pb2.AuthUserListResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserListRequest,
+        etcd3.rpc.rpc_pb2.AuthUserListResponse,
+    ],
+)
+
+_AuthUserDeleteType = typing_extensions.TypeVar(
+    "_AuthUserDeleteType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
+        etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
+        etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
+        etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
+    ],
+)
+
+_AuthUserChangePasswordType = typing_extensions.TypeVar(
+    "_AuthUserChangePasswordType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
+        etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
+        etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
+        etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
+    ],
+)
+
+_AuthUserGrantRoleType = typing_extensions.TypeVar(
+    "_AuthUserGrantRoleType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
+        etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
+        etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
+        etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
+    ],
+)
+
+_AuthUserRevokeRoleType = typing_extensions.TypeVar(
+    "_AuthUserRevokeRoleType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
+        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
+        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
+        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
+    ],
+)
+
+_AuthRoleAddType = typing_extensions.TypeVar(
+    "_AuthRoleAddType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
+    ],
+)
+
+_AuthRoleGetType = typing_extensions.TypeVar(
+    "_AuthRoleGetType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
+    ],
+)
+
+_AuthRoleListType = typing_extensions.TypeVar(
+    "_AuthRoleListType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleListRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleListResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleListRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleListResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleListRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleListResponse,
+    ],
+)
+
+_AuthRoleDeleteType = typing_extensions.TypeVar(
+    "_AuthRoleDeleteType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
+    ],
+)
+
+_AuthRoleGrantPermissionType = typing_extensions.TypeVar(
+    "_AuthRoleGrantPermissionType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
+    ],
+)
+
+_AuthRoleRevokePermissionType = typing_extensions.TypeVar(
+    "_AuthRoleRevokePermissionType",
+    grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
+    ],
+    default=grpc.UnaryUnaryMultiCallable[
+        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
+        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
+    ],
+)
+
+class AuthStub(
+    typing.Generic[
+        _AuthAuthEnableType,
+        _AuthAuthDisableType,
+        _AuthAuthStatusType,
+        _AuthAuthenticateType,
+        _AuthUserAddType,
+        _AuthUserGetType,
+        _AuthUserListType,
+        _AuthUserDeleteType,
+        _AuthUserChangePasswordType,
+        _AuthUserGrantRoleType,
+        _AuthUserRevokeRoleType,
+        _AuthRoleAddType,
+        _AuthRoleGetType,
+        _AuthRoleListType,
+        _AuthRoleDeleteType,
+        _AuthRoleGrantPermissionType,
+        _AuthRoleRevokePermissionType,
+    ]
+):
+    @typing.overload
     def __init__(
-        self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]
+        self: AuthStub[
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthEnableRequest,
+                etcd3.rpc.rpc_pb2.AuthEnableResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthDisableRequest,
+                etcd3.rpc.rpc_pb2.AuthDisableResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthStatusRequest,
+                etcd3.rpc.rpc_pb2.AuthStatusResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthenticateRequest,
+                etcd3.rpc.rpc_pb2.AuthenticateResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserAddRequest,
+                etcd3.rpc.rpc_pb2.AuthUserAddResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserGetRequest,
+                etcd3.rpc.rpc_pb2.AuthUserGetResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserListRequest,
+                etcd3.rpc.rpc_pb2.AuthUserListResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
+                etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
+                etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
+                etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
+                etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleListRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleListResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
+            ],
+            grpc.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
+            ],
+        ],
+        channel: grpc.Channel,
     ) -> None: ...
-    AuthEnable: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthEnableRequest,
-        etcd3.rpc.rpc_pb2.AuthEnableResponse,
-    ]
+    @typing.overload
+    def __init__(
+        self: AuthStub[
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthEnableRequest,
+                etcd3.rpc.rpc_pb2.AuthEnableResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthDisableRequest,
+                etcd3.rpc.rpc_pb2.AuthDisableResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthStatusRequest,
+                etcd3.rpc.rpc_pb2.AuthStatusResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthenticateRequest,
+                etcd3.rpc.rpc_pb2.AuthenticateResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserAddRequest,
+                etcd3.rpc.rpc_pb2.AuthUserAddResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserGetRequest,
+                etcd3.rpc.rpc_pb2.AuthUserGetResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserListRequest,
+                etcd3.rpc.rpc_pb2.AuthUserListResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
+                etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
+                etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
+                etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
+                etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleListRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleListResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
+            ],
+            grpc.aio.UnaryUnaryMultiCallable[
+                etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
+                etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
+            ],
+        ],
+        channel: grpc.aio.Channel,
+    ) -> None: ...
+
+    AuthEnable: _AuthAuthEnableType
     """AuthEnable enables authentication."""
 
-    AuthDisable: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthDisableRequest,
-        etcd3.rpc.rpc_pb2.AuthDisableResponse,
-    ]
+    AuthDisable: _AuthAuthDisableType
     """AuthDisable disables authentication."""
 
-    AuthStatus: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthStatusRequest,
-        etcd3.rpc.rpc_pb2.AuthStatusResponse,
-    ]
+    AuthStatus: _AuthAuthStatusType
     """AuthStatus displays authentication status."""
 
-    Authenticate: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthenticateRequest,
-        etcd3.rpc.rpc_pb2.AuthenticateResponse,
-    ]
+    Authenticate: _AuthAuthenticateType
     """Authenticate processes an authenticate request."""
 
-    UserAdd: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserAddRequest,
-        etcd3.rpc.rpc_pb2.AuthUserAddResponse,
-    ]
+    UserAdd: _AuthUserAddType
     """UserAdd adds a new user. User name cannot be empty."""
 
-    UserGet: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserGetRequest,
-        etcd3.rpc.rpc_pb2.AuthUserGetResponse,
-    ]
+    UserGet: _AuthUserGetType
     """UserGet gets detailed user information."""
 
-    UserList: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserListRequest,
-        etcd3.rpc.rpc_pb2.AuthUserListResponse,
-    ]
+    UserList: _AuthUserListType
     """UserList gets a list of all users."""
 
-    UserDelete: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
-        etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
-    ]
+    UserDelete: _AuthUserDeleteType
     """UserDelete deletes a specified user."""
 
-    UserChangePassword: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
-        etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
-    ]
+    UserChangePassword: _AuthUserChangePasswordType
     """UserChangePassword changes the password of a specified user."""
 
-    UserGrantRole: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
-        etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
-    ]
+    UserGrantRole: _AuthUserGrantRoleType
     """UserGrant grants a role to a specified user."""
 
-    UserRevokeRole: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
-        etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
-    ]
+    UserRevokeRole: _AuthUserRevokeRoleType
     """UserRevokeRole revokes a role of specified user."""
 
-    RoleAdd: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
-        etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
-    ]
+    RoleAdd: _AuthRoleAddType
     """RoleAdd adds a new role. Role name cannot be empty."""
 
-    RoleGet: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
-        etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
-    ]
+    RoleGet: _AuthRoleGetType
     """RoleGet gets detailed role information."""
 
-    RoleList: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthRoleListRequest,
-        etcd3.rpc.rpc_pb2.AuthRoleListResponse,
-    ]
+    RoleList: _AuthRoleListType
     """RoleList gets lists of all roles."""
 
-    RoleDelete: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
-        etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
-    ]
+    RoleDelete: _AuthRoleDeleteType
     """RoleDelete deletes a specified role."""
 
-    RoleGrantPermission: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
-        etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
-    ]
+    RoleGrantPermission: _AuthRoleGrantPermissionType
     """RoleGrantPermission grants a permission of a specified key or range to a specified role."""
 
-    RoleRevokePermission: grpc.UnaryUnaryMultiCallable[
-        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
-        etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
-    ]
+    RoleRevokePermission: _AuthRoleRevokePermissionType
     """RoleRevokePermission revokes a key or range permission of a specified role."""
 
-class AuthAsyncStub:
-    AuthEnable: grpc.aio.UnaryUnaryMultiCallable[
+AuthAsyncStub: typing_extensions.TypeAlias = AuthStub[
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthEnableRequest,
         etcd3.rpc.rpc_pb2.AuthEnableResponse,
-    ]
-    """AuthEnable enables authentication."""
-
-    AuthDisable: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthDisableRequest,
         etcd3.rpc.rpc_pb2.AuthDisableResponse,
-    ]
-    """AuthDisable disables authentication."""
-
-    AuthStatus: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthStatusRequest,
         etcd3.rpc.rpc_pb2.AuthStatusResponse,
-    ]
-    """AuthStatus displays authentication status."""
-
-    Authenticate: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthenticateRequest,
         etcd3.rpc.rpc_pb2.AuthenticateResponse,
-    ]
-    """Authenticate processes an authenticate request."""
-
-    UserAdd: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserAddRequest,
         etcd3.rpc.rpc_pb2.AuthUserAddResponse,
-    ]
-    """UserAdd adds a new user. User name cannot be empty."""
-
-    UserGet: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserGetRequest,
         etcd3.rpc.rpc_pb2.AuthUserGetResponse,
-    ]
-    """UserGet gets detailed user information."""
-
-    UserList: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserListRequest,
         etcd3.rpc.rpc_pb2.AuthUserListResponse,
-    ]
-    """UserList gets a list of all users."""
-
-    UserDelete: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserDeleteRequest,
         etcd3.rpc.rpc_pb2.AuthUserDeleteResponse,
-    ]
-    """UserDelete deletes a specified user."""
-
-    UserChangePassword: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserChangePasswordRequest,
         etcd3.rpc.rpc_pb2.AuthUserChangePasswordResponse,
-    ]
-    """UserChangePassword changes the password of a specified user."""
-
-    UserGrantRole: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserGrantRoleRequest,
         etcd3.rpc.rpc_pb2.AuthUserGrantRoleResponse,
-    ]
-    """UserGrant grants a role to a specified user."""
-
-    UserRevokeRole: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthUserRevokeRoleRequest,
         etcd3.rpc.rpc_pb2.AuthUserRevokeRoleResponse,
-    ]
-    """UserRevokeRole revokes a role of specified user."""
-
-    RoleAdd: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthRoleAddRequest,
         etcd3.rpc.rpc_pb2.AuthRoleAddResponse,
-    ]
-    """RoleAdd adds a new role. Role name cannot be empty."""
-
-    RoleGet: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthRoleGetRequest,
         etcd3.rpc.rpc_pb2.AuthRoleGetResponse,
-    ]
-    """RoleGet gets detailed role information."""
-
-    RoleList: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthRoleListRequest,
         etcd3.rpc.rpc_pb2.AuthRoleListResponse,
-    ]
-    """RoleList gets lists of all roles."""
-
-    RoleDelete: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthRoleDeleteRequest,
         etcd3.rpc.rpc_pb2.AuthRoleDeleteResponse,
-    ]
-    """RoleDelete deletes a specified role."""
-
-    RoleGrantPermission: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionRequest,
         etcd3.rpc.rpc_pb2.AuthRoleGrantPermissionResponse,
-    ]
-    """RoleGrantPermission grants a permission of a specified key or range to a specified role."""
-
-    RoleRevokePermission: grpc.aio.UnaryUnaryMultiCallable[
+    ],
+    grpc.aio.UnaryUnaryMultiCallable[
         etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionRequest,
         etcd3.rpc.rpc_pb2.AuthRoleRevokePermissionResponse,
-    ]
-    """RoleRevokePermission revokes a key or range permission of a specified role."""
+    ],
+]
 
 class AuthServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod

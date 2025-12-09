@@ -73,7 +73,7 @@ class KeyValue(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___KeyValue = KeyValue
+Global___KeyValue: typing_extensions.TypeAlias = KeyValue
 
 @typing.final
 class Event(google.protobuf.message.Message):
@@ -100,13 +100,13 @@ class Event(google.protobuf.message.Message):
     TYPE_FIELD_NUMBER: builtins.int
     KV_FIELD_NUMBER: builtins.int
     PREV_KV_FIELD_NUMBER: builtins.int
-    type: global___Event.EventType.ValueType
+    type: Global___Event.EventType.ValueType
     """type is the kind of event. If type is a PUT, it indicates
     new data has been stored to the key. If type is a DELETE,
     it indicates the key was deleted.
     """
     @property
-    def kv(self) -> global___KeyValue:
+    def kv(self) -> Global___KeyValue:
         """kv holds the KeyValue for the event.
         A PUT event contains current kv pair.
         A PUT event with kv.Version=1 indicates the creation of a key.
@@ -115,15 +115,15 @@ class Event(google.protobuf.message.Message):
         """
 
     @property
-    def prev_kv(self) -> global___KeyValue:
+    def prev_kv(self) -> Global___KeyValue:
         """prev_kv holds the key-value pair before the event happens."""
 
     def __init__(
         self,
         *,
-        type: global___Event.EventType.ValueType = ...,
-        kv: global___KeyValue | None = ...,
-        prev_kv: global___KeyValue | None = ...,
+        type: Global___Event.EventType.ValueType = ...,
+        kv: Global___KeyValue | None = ...,
+        prev_kv: Global___KeyValue | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["kv", b"kv", "prev_kv", b"prev_kv"]
@@ -133,4 +133,4 @@ class Event(google.protobuf.message.Message):
         field_name: typing.Literal["kv", b"kv", "prev_kv", b"prev_kv", "type", b"type"],
     ) -> None: ...
 
-global___Event = Event
+Global___Event: typing_extensions.TypeAlias = Event

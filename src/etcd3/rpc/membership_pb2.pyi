@@ -8,7 +8,13 @@ import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
+import sys
 import typing
+
+if sys.version_info >= (3, 10):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
@@ -41,7 +47,7 @@ class RaftAttributes(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___RaftAttributes = RaftAttributes
+Global___RaftAttributes: typing_extensions.TypeAlias = RaftAttributes
 
 @typing.final
 class Attributes(google.protobuf.message.Message):
@@ -68,7 +74,7 @@ class Attributes(google.protobuf.message.Message):
         self, field_name: typing.Literal["client_urls", b"client_urls", "name", b"name"]
     ) -> None: ...
 
-global___Attributes = Attributes
+Global___Attributes: typing_extensions.TypeAlias = Attributes
 
 @typing.final
 class Member(google.protobuf.message.Message):
@@ -79,15 +85,15 @@ class Member(google.protobuf.message.Message):
     MEMBER_ATTRIBUTES_FIELD_NUMBER: builtins.int
     ID: builtins.int
     @property
-    def raft_attributes(self) -> global___RaftAttributes: ...
+    def raft_attributes(self) -> Global___RaftAttributes: ...
     @property
-    def member_attributes(self) -> global___Attributes: ...
+    def member_attributes(self) -> Global___Attributes: ...
     def __init__(
         self,
         *,
         ID: builtins.int = ...,
-        raft_attributes: global___RaftAttributes | None = ...,
-        member_attributes: global___Attributes | None = ...,
+        raft_attributes: Global___RaftAttributes | None = ...,
+        member_attributes: Global___Attributes | None = ...,
     ) -> None: ...
     def HasField(
         self,
@@ -110,7 +116,7 @@ class Member(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___Member = Member
+Global___Member: typing_extensions.TypeAlias = Member
 
 @typing.final
 class ClusterVersionSetRequest(google.protobuf.message.Message):
@@ -125,7 +131,9 @@ class ClusterVersionSetRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["ver", b"ver"]) -> None: ...
 
-global___ClusterVersionSetRequest = ClusterVersionSetRequest
+Global___ClusterVersionSetRequest: typing_extensions.TypeAlias = (
+    ClusterVersionSetRequest
+)
 
 @typing.final
 class ClusterMemberAttrSetRequest(google.protobuf.message.Message):
@@ -135,12 +143,12 @@ class ClusterMemberAttrSetRequest(google.protobuf.message.Message):
     MEMBER_ATTRIBUTES_FIELD_NUMBER: builtins.int
     member_ID: builtins.int
     @property
-    def member_attributes(self) -> global___Attributes: ...
+    def member_attributes(self) -> Global___Attributes: ...
     def __init__(
         self,
         *,
         member_ID: builtins.int = ...,
-        member_attributes: global___Attributes | None = ...,
+        member_attributes: Global___Attributes | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["member_attributes", b"member_attributes"]
@@ -152,7 +160,9 @@ class ClusterMemberAttrSetRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___ClusterMemberAttrSetRequest = ClusterMemberAttrSetRequest
+Global___ClusterMemberAttrSetRequest: typing_extensions.TypeAlias = (
+    ClusterMemberAttrSetRequest
+)
 
 @typing.final
 class DowngradeInfoSetRequest(google.protobuf.message.Message):
@@ -172,4 +182,4 @@ class DowngradeInfoSetRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["enabled", b"enabled", "ver", b"ver"]
     ) -> None: ...
 
-global___DowngradeInfoSetRequest = DowngradeInfoSetRequest
+Global___DowngradeInfoSetRequest: typing_extensions.TypeAlias = DowngradeInfoSetRequest

@@ -45,7 +45,7 @@ NOSPACE: AlarmType.ValueType  # 1
 """space quota is exhausted"""
 CORRUPT: AlarmType.ValueType  # 2
 """kv store corruption detected"""
-global___AlarmType = AlarmType
+Global___AlarmType: typing_extensions.TypeAlias = AlarmType
 
 @typing.final
 class ResponseHeader(google.protobuf.message.Message):
@@ -90,7 +90,7 @@ class ResponseHeader(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___ResponseHeader = ResponseHeader
+Global___ResponseHeader: typing_extensions.TypeAlias = ResponseHeader
 
 @typing.final
 class RangeRequest(google.protobuf.message.Message):
@@ -177,9 +177,9 @@ class RangeRequest(google.protobuf.message.Message):
     If revision is less or equal to zero, the range is over the newest key-value store.
     If the revision has been compacted, ErrCompacted is returned as a response.
     """
-    sort_order: global___RangeRequest.SortOrder.ValueType
+    sort_order: Global___RangeRequest.SortOrder.ValueType
     """sort_order is the order for returned sorted results."""
-    sort_target: global___RangeRequest.SortTarget.ValueType
+    sort_target: Global___RangeRequest.SortTarget.ValueType
     """sort_target is the key-value field to use for sorting."""
     serializable: builtins.bool
     """serializable sets the range request to use serializable member-local reads.
@@ -216,8 +216,8 @@ class RangeRequest(google.protobuf.message.Message):
         range_end: builtins.bytes = ...,
         limit: builtins.int = ...,
         revision: builtins.int = ...,
-        sort_order: global___RangeRequest.SortOrder.ValueType = ...,
-        sort_target: global___RangeRequest.SortTarget.ValueType = ...,
+        sort_order: Global___RangeRequest.SortOrder.ValueType = ...,
+        sort_target: Global___RangeRequest.SortTarget.ValueType = ...,
         serializable: builtins.bool = ...,
         keys_only: builtins.bool = ...,
         count_only: builtins.bool = ...,
@@ -258,7 +258,7 @@ class RangeRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___RangeRequest = RangeRequest
+Global___RangeRequest: typing_extensions.TypeAlias = RangeRequest
 
 @typing.final
 class RangeResponse(google.protobuf.message.Message):
@@ -273,7 +273,7 @@ class RangeResponse(google.protobuf.message.Message):
     count: builtins.int
     """count is set to the number of keys within the range when requested."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def kvs(
         self,
@@ -287,7 +287,7 @@ class RangeResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         kvs: collections.abc.Iterable[etcd3.rpc.kv_pb2.KeyValue] | None = ...,
         more: builtins.bool = ...,
         count: builtins.int = ...,
@@ -302,7 +302,7 @@ class RangeResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___RangeResponse = RangeResponse
+Global___RangeResponse: typing_extensions.TypeAlias = RangeResponse
 
 @typing.final
 class PutRequest(google.protobuf.message.Message):
@@ -362,7 +362,7 @@ class PutRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___PutRequest = PutRequest
+Global___PutRequest: typing_extensions.TypeAlias = PutRequest
 
 @typing.final
 class PutResponse(google.protobuf.message.Message):
@@ -371,7 +371,7 @@ class PutResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     PREV_KV_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def prev_kv(self) -> etcd3.rpc.kv_pb2.KeyValue:
         """if prev_kv is set in the request, the previous key-value pair will be returned."""
@@ -379,7 +379,7 @@ class PutResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         prev_kv: etcd3.rpc.kv_pb2.KeyValue | None = ...,
     ) -> None: ...
     def HasField(
@@ -389,7 +389,7 @@ class PutResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "prev_kv", b"prev_kv"]
     ) -> None: ...
 
-global___PutResponse = PutResponse
+Global___PutResponse: typing_extensions.TypeAlias = PutResponse
 
 @typing.final
 class DeleteRangeRequest(google.protobuf.message.Message):
@@ -425,7 +425,7 @@ class DeleteRangeRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___DeleteRangeRequest = DeleteRangeRequest
+Global___DeleteRangeRequest: typing_extensions.TypeAlias = DeleteRangeRequest
 
 @typing.final
 class DeleteRangeResponse(google.protobuf.message.Message):
@@ -437,7 +437,7 @@ class DeleteRangeResponse(google.protobuf.message.Message):
     deleted: builtins.int
     """deleted is the number of keys deleted by the delete range request."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def prev_kvs(
         self,
@@ -449,7 +449,7 @@ class DeleteRangeResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         deleted: builtins.int = ...,
         prev_kvs: collections.abc.Iterable[etcd3.rpc.kv_pb2.KeyValue] | None = ...,
     ) -> None: ...
@@ -463,7 +463,7 @@ class DeleteRangeResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___DeleteRangeResponse = DeleteRangeResponse
+Global___DeleteRangeResponse: typing_extensions.TypeAlias = DeleteRangeResponse
 
 @typing.final
 class RequestOp(google.protobuf.message.Message):
@@ -474,20 +474,20 @@ class RequestOp(google.protobuf.message.Message):
     REQUEST_DELETE_RANGE_FIELD_NUMBER: builtins.int
     REQUEST_TXN_FIELD_NUMBER: builtins.int
     @property
-    def request_range(self) -> global___RangeRequest: ...
+    def request_range(self) -> Global___RangeRequest: ...
     @property
-    def request_put(self) -> global___PutRequest: ...
+    def request_put(self) -> Global___PutRequest: ...
     @property
-    def request_delete_range(self) -> global___DeleteRangeRequest: ...
+    def request_delete_range(self) -> Global___DeleteRangeRequest: ...
     @property
-    def request_txn(self) -> global___TxnRequest: ...
+    def request_txn(self) -> Global___TxnRequest: ...
     def __init__(
         self,
         *,
-        request_range: global___RangeRequest | None = ...,
-        request_put: global___PutRequest | None = ...,
-        request_delete_range: global___DeleteRangeRequest | None = ...,
-        request_txn: global___TxnRequest | None = ...,
+        request_range: Global___RangeRequest | None = ...,
+        request_put: Global___PutRequest | None = ...,
+        request_delete_range: Global___DeleteRangeRequest | None = ...,
+        request_txn: Global___TxnRequest | None = ...,
     ) -> None: ...
     def HasField(
         self,
@@ -528,7 +528,7 @@ class RequestOp(google.protobuf.message.Message):
         | None
     ): ...
 
-global___RequestOp = RequestOp
+Global___RequestOp: typing_extensions.TypeAlias = RequestOp
 
 @typing.final
 class ResponseOp(google.protobuf.message.Message):
@@ -539,20 +539,20 @@ class ResponseOp(google.protobuf.message.Message):
     RESPONSE_DELETE_RANGE_FIELD_NUMBER: builtins.int
     RESPONSE_TXN_FIELD_NUMBER: builtins.int
     @property
-    def response_range(self) -> global___RangeResponse: ...
+    def response_range(self) -> Global___RangeResponse: ...
     @property
-    def response_put(self) -> global___PutResponse: ...
+    def response_put(self) -> Global___PutResponse: ...
     @property
-    def response_delete_range(self) -> global___DeleteRangeResponse: ...
+    def response_delete_range(self) -> Global___DeleteRangeResponse: ...
     @property
-    def response_txn(self) -> global___TxnResponse: ...
+    def response_txn(self) -> Global___TxnResponse: ...
     def __init__(
         self,
         *,
-        response_range: global___RangeResponse | None = ...,
-        response_put: global___PutResponse | None = ...,
-        response_delete_range: global___DeleteRangeResponse | None = ...,
-        response_txn: global___TxnResponse | None = ...,
+        response_range: Global___RangeResponse | None = ...,
+        response_put: Global___PutResponse | None = ...,
+        response_delete_range: Global___DeleteRangeResponse | None = ...,
+        response_txn: Global___TxnResponse | None = ...,
     ) -> None: ...
     def HasField(
         self,
@@ -593,7 +593,7 @@ class ResponseOp(google.protobuf.message.Message):
         | None
     ): ...
 
-global___ResponseOp = ResponseOp
+Global___ResponseOp: typing_extensions.TypeAlias = ResponseOp
 
 @typing.final
 class Compare(google.protobuf.message.Message):
@@ -654,9 +654,9 @@ class Compare(google.protobuf.message.Message):
     VALUE_FIELD_NUMBER: builtins.int
     LEASE_FIELD_NUMBER: builtins.int
     RANGE_END_FIELD_NUMBER: builtins.int
-    result: global___Compare.CompareResult.ValueType
+    result: Global___Compare.CompareResult.ValueType
     """result is logical comparison operation for this comparison."""
-    target: global___Compare.CompareTarget.ValueType
+    target: Global___Compare.CompareTarget.ValueType
     """target is the key-value field to inspect for the comparison."""
     key: builtins.bytes
     """key is the subject key for the comparison operation."""
@@ -680,8 +680,8 @@ class Compare(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        result: global___Compare.CompareResult.ValueType = ...,
-        target: global___Compare.CompareTarget.ValueType = ...,
+        result: Global___Compare.CompareResult.ValueType = ...,
+        target: Global___Compare.CompareTarget.ValueType = ...,
         key: builtins.bytes = ...,
         version: builtins.int = ...,
         create_revision: builtins.int = ...,
@@ -739,7 +739,7 @@ class Compare(google.protobuf.message.Message):
         | None
     ): ...
 
-global___Compare = Compare
+Global___Compare: typing_extensions.TypeAlias = Compare
 
 @typing.final
 class TxnRequest(google.protobuf.message.Message):
@@ -769,7 +769,7 @@ class TxnRequest(google.protobuf.message.Message):
     def compare(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Compare
+        Global___Compare
     ]:
         """compare is a list of predicates representing a conjunction of terms.
         If the comparisons succeed, then the success requests will be processed in order,
@@ -782,7 +782,7 @@ class TxnRequest(google.protobuf.message.Message):
     def success(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___RequestOp
+        Global___RequestOp
     ]:
         """success is a list of requests which will be applied when compare evaluates to true."""
 
@@ -790,16 +790,16 @@ class TxnRequest(google.protobuf.message.Message):
     def failure(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___RequestOp
+        Global___RequestOp
     ]:
         """failure is a list of requests which will be applied when compare evaluates to false."""
 
     def __init__(
         self,
         *,
-        compare: collections.abc.Iterable[global___Compare] | None = ...,
-        success: collections.abc.Iterable[global___RequestOp] | None = ...,
-        failure: collections.abc.Iterable[global___RequestOp] | None = ...,
+        compare: collections.abc.Iterable[Global___Compare] | None = ...,
+        success: collections.abc.Iterable[Global___RequestOp] | None = ...,
+        failure: collections.abc.Iterable[Global___RequestOp] | None = ...,
     ) -> None: ...
     def ClearField(
         self,
@@ -808,7 +808,7 @@ class TxnRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___TxnRequest = TxnRequest
+Global___TxnRequest: typing_extensions.TypeAlias = TxnRequest
 
 @typing.final
 class TxnResponse(google.protobuf.message.Message):
@@ -820,12 +820,12 @@ class TxnResponse(google.protobuf.message.Message):
     succeeded: builtins.bool
     """succeeded is set to true if the compare evaluated to true or false otherwise."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def responses(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___ResponseOp
+        Global___ResponseOp
     ]:
         """responses is a list of responses corresponding to the results from applying
         success if succeeded is true or failure if succeeded is false.
@@ -834,9 +834,9 @@ class TxnResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         succeeded: builtins.bool = ...,
-        responses: collections.abc.Iterable[global___ResponseOp] | None = ...,
+        responses: collections.abc.Iterable[Global___ResponseOp] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -848,7 +848,7 @@ class TxnResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___TxnResponse = TxnResponse
+Global___TxnResponse: typing_extensions.TypeAlias = TxnResponse
 
 @typing.final
 class CompactionRequest(google.protobuf.message.Message):
@@ -878,7 +878,7 @@ class CompactionRequest(google.protobuf.message.Message):
         field_name: typing.Literal["physical", b"physical", "revision", b"revision"],
     ) -> None: ...
 
-global___CompactionRequest = CompactionRequest
+Global___CompactionRequest: typing_extensions.TypeAlias = CompactionRequest
 
 @typing.final
 class CompactionResponse(google.protobuf.message.Message):
@@ -886,18 +886,18 @@ class CompactionResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___CompactionResponse = CompactionResponse
+Global___CompactionResponse: typing_extensions.TypeAlias = CompactionResponse
 
 @typing.final
 class HashRequest(google.protobuf.message.Message):
@@ -907,7 +907,7 @@ class HashRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___HashRequest = HashRequest
+Global___HashRequest: typing_extensions.TypeAlias = HashRequest
 
 @typing.final
 class HashKVRequest(google.protobuf.message.Message):
@@ -925,7 +925,7 @@ class HashKVRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["revision", b"revision"]
     ) -> None: ...
 
-global___HashKVRequest = HashKVRequest
+Global___HashKVRequest: typing_extensions.TypeAlias = HashKVRequest
 
 @typing.final
 class HashKVResponse(google.protobuf.message.Message):
@@ -942,11 +942,11 @@ class HashKVResponse(google.protobuf.message.Message):
     hash_revision: builtins.int
     """hash_revision is the revision up to which the hash is calculated."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         hash: builtins.int = ...,
         compact_revision: builtins.int = ...,
         hash_revision: builtins.int = ...,
@@ -968,7 +968,7 @@ class HashKVResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___HashKVResponse = HashKVResponse
+Global___HashKVResponse: typing_extensions.TypeAlias = HashKVResponse
 
 @typing.final
 class HashResponse(google.protobuf.message.Message):
@@ -979,11 +979,11 @@ class HashResponse(google.protobuf.message.Message):
     hash: builtins.int
     """hash is the hash value computed from the responding member's KV's backend."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         hash: builtins.int = ...,
     ) -> None: ...
     def HasField(
@@ -993,7 +993,7 @@ class HashResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["hash", b"hash", "header", b"header"]
     ) -> None: ...
 
-global___HashResponse = HashResponse
+Global___HashResponse: typing_extensions.TypeAlias = HashResponse
 
 @typing.final
 class SnapshotRequest(google.protobuf.message.Message):
@@ -1003,7 +1003,7 @@ class SnapshotRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___SnapshotRequest = SnapshotRequest
+Global___SnapshotRequest: typing_extensions.TypeAlias = SnapshotRequest
 
 @typing.final
 class SnapshotResponse(google.protobuf.message.Message):
@@ -1023,7 +1023,7 @@ class SnapshotResponse(google.protobuf.message.Message):
     Informs which etcd server version should be used when restoring the snapshot.
     """
     @property
-    def header(self) -> global___ResponseHeader:
+    def header(self) -> Global___ResponseHeader:
         """header has the current key-value store information. The first header in the snapshot
         stream indicates the point in time of the snapshot.
         """
@@ -1031,7 +1031,7 @@ class SnapshotResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         remaining_bytes: builtins.int = ...,
         blob: builtins.bytes = ...,
         version: builtins.str = ...,
@@ -1053,7 +1053,7 @@ class SnapshotResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___SnapshotResponse = SnapshotResponse
+Global___SnapshotResponse: typing_extensions.TypeAlias = SnapshotResponse
 
 @typing.final
 class WatchRequest(google.protobuf.message.Message):
@@ -1063,17 +1063,17 @@ class WatchRequest(google.protobuf.message.Message):
     CANCEL_REQUEST_FIELD_NUMBER: builtins.int
     PROGRESS_REQUEST_FIELD_NUMBER: builtins.int
     @property
-    def create_request(self) -> global___WatchCreateRequest: ...
+    def create_request(self) -> Global___WatchCreateRequest: ...
     @property
-    def cancel_request(self) -> global___WatchCancelRequest: ...
+    def cancel_request(self) -> Global___WatchCancelRequest: ...
     @property
-    def progress_request(self) -> global___WatchProgressRequest: ...
+    def progress_request(self) -> Global___WatchProgressRequest: ...
     def __init__(
         self,
         *,
-        create_request: global___WatchCreateRequest | None = ...,
-        cancel_request: global___WatchCancelRequest | None = ...,
-        progress_request: global___WatchProgressRequest | None = ...,
+        create_request: Global___WatchCreateRequest | None = ...,
+        cancel_request: Global___WatchCancelRequest | None = ...,
+        progress_request: Global___WatchProgressRequest | None = ...,
     ) -> None: ...
     def HasField(
         self,
@@ -1107,7 +1107,7 @@ class WatchRequest(google.protobuf.message.Message):
         typing.Literal["create_request", "cancel_request", "progress_request"] | None
     ): ...
 
-global___WatchRequest = WatchRequest
+Global___WatchRequest: typing_extensions.TypeAlias = WatchRequest
 
 @typing.final
 class WatchCreateRequest(google.protobuf.message.Message):
@@ -1177,7 +1177,7 @@ class WatchCreateRequest(google.protobuf.message.Message):
     def filters(
         self,
     ) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[
-        global___WatchCreateRequest.FilterType.ValueType
+        Global___WatchCreateRequest.FilterType.ValueType
     ]:
         """filters filter the events at server side before it sends back to the watcher."""
 
@@ -1189,7 +1189,7 @@ class WatchCreateRequest(google.protobuf.message.Message):
         start_revision: builtins.int = ...,
         progress_notify: builtins.bool = ...,
         filters: (
-            collections.abc.Iterable[global___WatchCreateRequest.FilterType.ValueType]
+            collections.abc.Iterable[Global___WatchCreateRequest.FilterType.ValueType]
             | None
         ) = ...,
         prev_kv: builtins.bool = ...,
@@ -1218,7 +1218,7 @@ class WatchCreateRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___WatchCreateRequest = WatchCreateRequest
+Global___WatchCreateRequest: typing_extensions.TypeAlias = WatchCreateRequest
 
 @typing.final
 class WatchCancelRequest(google.protobuf.message.Message):
@@ -1236,7 +1236,7 @@ class WatchCancelRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["watch_id", b"watch_id"]
     ) -> None: ...
 
-global___WatchCancelRequest = WatchCancelRequest
+Global___WatchCancelRequest: typing_extensions.TypeAlias = WatchCancelRequest
 
 @typing.final
 class WatchProgressRequest(google.protobuf.message.Message):
@@ -1250,7 +1250,7 @@ class WatchProgressRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___WatchProgressRequest = WatchProgressRequest
+Global___WatchProgressRequest: typing_extensions.TypeAlias = WatchProgressRequest
 
 @typing.final
 class WatchResponse(google.protobuf.message.Message):
@@ -1291,7 +1291,7 @@ class WatchResponse(google.protobuf.message.Message):
     fragment: builtins.bool
     """framgment is true if large watch response was split over multiple responses."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def events(
         self,
@@ -1301,7 +1301,7 @@ class WatchResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         watch_id: builtins.int = ...,
         created: builtins.bool = ...,
         canceled: builtins.bool = ...,
@@ -1335,7 +1335,7 @@ class WatchResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___WatchResponse = WatchResponse
+Global___WatchResponse: typing_extensions.TypeAlias = WatchResponse
 
 @typing.final
 class LeaseGrantRequest(google.protobuf.message.Message):
@@ -1357,7 +1357,7 @@ class LeaseGrantRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["ID", b"ID", "TTL", b"TTL"]
     ) -> None: ...
 
-global___LeaseGrantRequest = LeaseGrantRequest
+Global___LeaseGrantRequest: typing_extensions.TypeAlias = LeaseGrantRequest
 
 @typing.final
 class LeaseGrantResponse(google.protobuf.message.Message):
@@ -1373,11 +1373,11 @@ class LeaseGrantResponse(google.protobuf.message.Message):
     """TTL is the server chosen lease time-to-live in seconds."""
     error: builtins.str
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         ID: builtins.int = ...,
         TTL: builtins.int = ...,
         error: builtins.str = ...,
@@ -1392,7 +1392,7 @@ class LeaseGrantResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___LeaseGrantResponse = LeaseGrantResponse
+Global___LeaseGrantResponse: typing_extensions.TypeAlias = LeaseGrantResponse
 
 @typing.final
 class LeaseRevokeRequest(google.protobuf.message.Message):
@@ -1408,7 +1408,7 @@ class LeaseRevokeRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["ID", b"ID"]) -> None: ...
 
-global___LeaseRevokeRequest = LeaseRevokeRequest
+Global___LeaseRevokeRequest: typing_extensions.TypeAlias = LeaseRevokeRequest
 
 @typing.final
 class LeaseRevokeResponse(google.protobuf.message.Message):
@@ -1416,18 +1416,18 @@ class LeaseRevokeResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___LeaseRevokeResponse = LeaseRevokeResponse
+Global___LeaseRevokeResponse: typing_extensions.TypeAlias = LeaseRevokeResponse
 
 @typing.final
 class LeaseCheckpoint(google.protobuf.message.Message):
@@ -1449,7 +1449,7 @@ class LeaseCheckpoint(google.protobuf.message.Message):
         self, field_name: typing.Literal["ID", b"ID", "remaining_TTL", b"remaining_TTL"]
     ) -> None: ...
 
-global___LeaseCheckpoint = LeaseCheckpoint
+Global___LeaseCheckpoint: typing_extensions.TypeAlias = LeaseCheckpoint
 
 @typing.final
 class LeaseCheckpointRequest(google.protobuf.message.Message):
@@ -1460,18 +1460,18 @@ class LeaseCheckpointRequest(google.protobuf.message.Message):
     def checkpoints(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___LeaseCheckpoint
+        Global___LeaseCheckpoint
     ]: ...
     def __init__(
         self,
         *,
-        checkpoints: collections.abc.Iterable[global___LeaseCheckpoint] | None = ...,
+        checkpoints: collections.abc.Iterable[Global___LeaseCheckpoint] | None = ...,
     ) -> None: ...
     def ClearField(
         self, field_name: typing.Literal["checkpoints", b"checkpoints"]
     ) -> None: ...
 
-global___LeaseCheckpointRequest = LeaseCheckpointRequest
+Global___LeaseCheckpointRequest: typing_extensions.TypeAlias = LeaseCheckpointRequest
 
 @typing.final
 class LeaseCheckpointResponse(google.protobuf.message.Message):
@@ -1479,18 +1479,18 @@ class LeaseCheckpointResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___LeaseCheckpointResponse = LeaseCheckpointResponse
+Global___LeaseCheckpointResponse: typing_extensions.TypeAlias = LeaseCheckpointResponse
 
 @typing.final
 class LeaseKeepAliveRequest(google.protobuf.message.Message):
@@ -1506,7 +1506,7 @@ class LeaseKeepAliveRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["ID", b"ID"]) -> None: ...
 
-global___LeaseKeepAliveRequest = LeaseKeepAliveRequest
+Global___LeaseKeepAliveRequest: typing_extensions.TypeAlias = LeaseKeepAliveRequest
 
 @typing.final
 class LeaseKeepAliveResponse(google.protobuf.message.Message):
@@ -1520,11 +1520,11 @@ class LeaseKeepAliveResponse(google.protobuf.message.Message):
     TTL: builtins.int
     """TTL is the new time-to-live for the lease."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         ID: builtins.int = ...,
         TTL: builtins.int = ...,
     ) -> None: ...
@@ -1536,7 +1536,7 @@ class LeaseKeepAliveResponse(google.protobuf.message.Message):
         field_name: typing.Literal["ID", b"ID", "TTL", b"TTL", "header", b"header"],
     ) -> None: ...
 
-global___LeaseKeepAliveResponse = LeaseKeepAliveResponse
+Global___LeaseKeepAliveResponse: typing_extensions.TypeAlias = LeaseKeepAliveResponse
 
 @typing.final
 class LeaseTimeToLiveRequest(google.protobuf.message.Message):
@@ -1558,7 +1558,7 @@ class LeaseTimeToLiveRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["ID", b"ID", "keys", b"keys"]
     ) -> None: ...
 
-global___LeaseTimeToLiveRequest = LeaseTimeToLiveRequest
+Global___LeaseTimeToLiveRequest: typing_extensions.TypeAlias = LeaseTimeToLiveRequest
 
 @typing.final
 class LeaseTimeToLiveResponse(google.protobuf.message.Message):
@@ -1576,7 +1576,7 @@ class LeaseTimeToLiveResponse(google.protobuf.message.Message):
     grantedTTL: builtins.int
     """GrantedTTL is the initial granted time in seconds upon lease creation/renewal."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def keys(
         self,
@@ -1588,7 +1588,7 @@ class LeaseTimeToLiveResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         ID: builtins.int = ...,
         TTL: builtins.int = ...,
         grantedTTL: builtins.int = ...,
@@ -1613,7 +1613,7 @@ class LeaseTimeToLiveResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___LeaseTimeToLiveResponse = LeaseTimeToLiveResponse
+Global___LeaseTimeToLiveResponse: typing_extensions.TypeAlias = LeaseTimeToLiveResponse
 
 @typing.final
 class LeaseLeasesRequest(google.protobuf.message.Message):
@@ -1623,7 +1623,7 @@ class LeaseLeasesRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___LeaseLeasesRequest = LeaseLeasesRequest
+Global___LeaseLeasesRequest: typing_extensions.TypeAlias = LeaseLeasesRequest
 
 @typing.final
 class LeaseStatus(google.protobuf.message.Message):
@@ -1639,7 +1639,7 @@ class LeaseStatus(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["ID", b"ID"]) -> None: ...
 
-global___LeaseStatus = LeaseStatus
+Global___LeaseStatus: typing_extensions.TypeAlias = LeaseStatus
 
 @typing.final
 class LeaseLeasesResponse(google.protobuf.message.Message):
@@ -1648,18 +1648,18 @@ class LeaseLeasesResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     LEASES_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def leases(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___LeaseStatus
+        Global___LeaseStatus
     ]: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        leases: collections.abc.Iterable[global___LeaseStatus] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        leases: collections.abc.Iterable[Global___LeaseStatus] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -1668,7 +1668,7 @@ class LeaseLeasesResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "leases", b"leases"]
     ) -> None: ...
 
-global___LeaseLeasesResponse = LeaseLeasesResponse
+Global___LeaseLeasesResponse: typing_extensions.TypeAlias = LeaseLeasesResponse
 
 @typing.final
 class Member(google.protobuf.message.Message):
@@ -1722,7 +1722,7 @@ class Member(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___Member = Member
+Global___Member: typing_extensions.TypeAlias = Member
 
 @typing.final
 class MemberAddRequest(google.protobuf.message.Message):
@@ -1749,7 +1749,7 @@ class MemberAddRequest(google.protobuf.message.Message):
         field_name: typing.Literal["isLearner", b"isLearner", "peerURLs", b"peerURLs"],
     ) -> None: ...
 
-global___MemberAddRequest = MemberAddRequest
+Global___MemberAddRequest: typing_extensions.TypeAlias = MemberAddRequest
 
 @typing.final
 class MemberAddResponse(google.protobuf.message.Message):
@@ -1759,25 +1759,25 @@ class MemberAddResponse(google.protobuf.message.Message):
     MEMBER_FIELD_NUMBER: builtins.int
     MEMBERS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
-    def member(self) -> global___Member:
+    def member(self) -> Global___Member:
         """member is the member information for the added member."""
 
     @property
     def members(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Member
+        Global___Member
     ]:
         """members is a list of all members after adding the new member."""
 
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        member: global___Member | None = ...,
-        members: collections.abc.Iterable[global___Member] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        member: Global___Member | None = ...,
+        members: collections.abc.Iterable[Global___Member] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header", "member", b"member"]
@@ -1789,7 +1789,7 @@ class MemberAddResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___MemberAddResponse = MemberAddResponse
+Global___MemberAddResponse: typing_extensions.TypeAlias = MemberAddResponse
 
 @typing.final
 class MemberRemoveRequest(google.protobuf.message.Message):
@@ -1805,7 +1805,7 @@ class MemberRemoveRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["ID", b"ID"]) -> None: ...
 
-global___MemberRemoveRequest = MemberRemoveRequest
+Global___MemberRemoveRequest: typing_extensions.TypeAlias = MemberRemoveRequest
 
 @typing.final
 class MemberRemoveResponse(google.protobuf.message.Message):
@@ -1814,20 +1814,20 @@ class MemberRemoveResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     MEMBERS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def members(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Member
+        Global___Member
     ]:
         """members is a list of all members after removing the member."""
 
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        members: collections.abc.Iterable[global___Member] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        members: collections.abc.Iterable[Global___Member] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -1836,7 +1836,7 @@ class MemberRemoveResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "members", b"members"]
     ) -> None: ...
 
-global___MemberRemoveResponse = MemberRemoveResponse
+Global___MemberRemoveResponse: typing_extensions.TypeAlias = MemberRemoveResponse
 
 @typing.final
 class MemberUpdateRequest(google.protobuf.message.Message):
@@ -1862,7 +1862,7 @@ class MemberUpdateRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["ID", b"ID", "peerURLs", b"peerURLs"]
     ) -> None: ...
 
-global___MemberUpdateRequest = MemberUpdateRequest
+Global___MemberUpdateRequest: typing_extensions.TypeAlias = MemberUpdateRequest
 
 @typing.final
 class MemberUpdateResponse(google.protobuf.message.Message):
@@ -1871,20 +1871,20 @@ class MemberUpdateResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     MEMBERS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def members(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Member
+        Global___Member
     ]:
         """members is a list of all members after updating the member."""
 
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        members: collections.abc.Iterable[global___Member] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        members: collections.abc.Iterable[Global___Member] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -1893,7 +1893,7 @@ class MemberUpdateResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "members", b"members"]
     ) -> None: ...
 
-global___MemberUpdateResponse = MemberUpdateResponse
+Global___MemberUpdateResponse: typing_extensions.TypeAlias = MemberUpdateResponse
 
 @typing.final
 class MemberListRequest(google.protobuf.message.Message):
@@ -1910,7 +1910,7 @@ class MemberListRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["linearizable", b"linearizable"]
     ) -> None: ...
 
-global___MemberListRequest = MemberListRequest
+Global___MemberListRequest: typing_extensions.TypeAlias = MemberListRequest
 
 @typing.final
 class MemberListResponse(google.protobuf.message.Message):
@@ -1919,20 +1919,20 @@ class MemberListResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     MEMBERS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def members(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Member
+        Global___Member
     ]:
         """members is a list of all members associated with the cluster."""
 
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        members: collections.abc.Iterable[global___Member] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        members: collections.abc.Iterable[Global___Member] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -1941,7 +1941,7 @@ class MemberListResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "members", b"members"]
     ) -> None: ...
 
-global___MemberListResponse = MemberListResponse
+Global___MemberListResponse: typing_extensions.TypeAlias = MemberListResponse
 
 @typing.final
 class MemberPromoteRequest(google.protobuf.message.Message):
@@ -1957,7 +1957,7 @@ class MemberPromoteRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["ID", b"ID"]) -> None: ...
 
-global___MemberPromoteRequest = MemberPromoteRequest
+Global___MemberPromoteRequest: typing_extensions.TypeAlias = MemberPromoteRequest
 
 @typing.final
 class MemberPromoteResponse(google.protobuf.message.Message):
@@ -1966,20 +1966,20 @@ class MemberPromoteResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     MEMBERS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def members(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Member
+        Global___Member
     ]:
         """members is a list of all members after promoting the member."""
 
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        members: collections.abc.Iterable[global___Member] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        members: collections.abc.Iterable[Global___Member] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -1988,7 +1988,7 @@ class MemberPromoteResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "members", b"members"]
     ) -> None: ...
 
-global___MemberPromoteResponse = MemberPromoteResponse
+Global___MemberPromoteResponse: typing_extensions.TypeAlias = MemberPromoteResponse
 
 @typing.final
 class DefragmentRequest(google.protobuf.message.Message):
@@ -1998,7 +1998,7 @@ class DefragmentRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___DefragmentRequest = DefragmentRequest
+Global___DefragmentRequest: typing_extensions.TypeAlias = DefragmentRequest
 
 @typing.final
 class DefragmentResponse(google.protobuf.message.Message):
@@ -2006,18 +2006,18 @@ class DefragmentResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___DefragmentResponse = DefragmentResponse
+Global___DefragmentResponse: typing_extensions.TypeAlias = DefragmentResponse
 
 @typing.final
 class MoveLeaderRequest(google.protobuf.message.Message):
@@ -2035,7 +2035,7 @@ class MoveLeaderRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["targetID", b"targetID"]
     ) -> None: ...
 
-global___MoveLeaderRequest = MoveLeaderRequest
+Global___MoveLeaderRequest: typing_extensions.TypeAlias = MoveLeaderRequest
 
 @typing.final
 class MoveLeaderResponse(google.protobuf.message.Message):
@@ -2043,18 +2043,18 @@ class MoveLeaderResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___MoveLeaderResponse = MoveLeaderResponse
+Global___MoveLeaderResponse: typing_extensions.TypeAlias = MoveLeaderResponse
 
 @typing.final
 class AlarmRequest(google.protobuf.message.Message):
@@ -2083,7 +2083,7 @@ class AlarmRequest(google.protobuf.message.Message):
     ACTION_FIELD_NUMBER: builtins.int
     MEMBERID_FIELD_NUMBER: builtins.int
     ALARM_FIELD_NUMBER: builtins.int
-    action: global___AlarmRequest.AlarmAction.ValueType
+    action: Global___AlarmRequest.AlarmAction.ValueType
     """action is the kind of alarm request to issue. The action
     may GET alarm statuses, ACTIVATE an alarm, or DEACTIVATE a
     raised alarm.
@@ -2092,14 +2092,14 @@ class AlarmRequest(google.protobuf.message.Message):
     """memberID is the ID of the member associated with the alarm. If memberID is 0, the
     alarm request covers all members.
     """
-    alarm: global___AlarmType.ValueType
+    alarm: Global___AlarmType.ValueType
     """alarm is the type of alarm to consider for this request."""
     def __init__(
         self,
         *,
-        action: global___AlarmRequest.AlarmAction.ValueType = ...,
+        action: Global___AlarmRequest.AlarmAction.ValueType = ...,
         memberID: builtins.int = ...,
-        alarm: global___AlarmType.ValueType = ...,
+        alarm: Global___AlarmType.ValueType = ...,
     ) -> None: ...
     def ClearField(
         self,
@@ -2108,7 +2108,7 @@ class AlarmRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___AlarmRequest = AlarmRequest
+Global___AlarmRequest: typing_extensions.TypeAlias = AlarmRequest
 
 @typing.final
 class AlarmMember(google.protobuf.message.Message):
@@ -2118,19 +2118,19 @@ class AlarmMember(google.protobuf.message.Message):
     ALARM_FIELD_NUMBER: builtins.int
     memberID: builtins.int
     """memberID is the ID of the member associated with the raised alarm."""
-    alarm: global___AlarmType.ValueType
+    alarm: Global___AlarmType.ValueType
     """alarm is the type of alarm which has been raised."""
     def __init__(
         self,
         *,
         memberID: builtins.int = ...,
-        alarm: global___AlarmType.ValueType = ...,
+        alarm: Global___AlarmType.ValueType = ...,
     ) -> None: ...
     def ClearField(
         self, field_name: typing.Literal["alarm", b"alarm", "memberID", b"memberID"]
     ) -> None: ...
 
-global___AlarmMember = AlarmMember
+Global___AlarmMember: typing_extensions.TypeAlias = AlarmMember
 
 @typing.final
 class AlarmResponse(google.protobuf.message.Message):
@@ -2139,20 +2139,20 @@ class AlarmResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     ALARMS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def alarms(
         self,
     ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___AlarmMember
+        Global___AlarmMember
     ]:
         """alarms is a list of alarms associated with the alarm request."""
 
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
-        alarms: collections.abc.Iterable[global___AlarmMember] | None = ...,
+        header: Global___ResponseHeader | None = ...,
+        alarms: collections.abc.Iterable[Global___AlarmMember] | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
@@ -2161,7 +2161,7 @@ class AlarmResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["alarms", b"alarms", "header", b"header"]
     ) -> None: ...
 
-global___AlarmResponse = AlarmResponse
+Global___AlarmResponse: typing_extensions.TypeAlias = AlarmResponse
 
 @typing.final
 class DowngradeRequest(google.protobuf.message.Message):
@@ -2191,7 +2191,7 @@ class DowngradeRequest(google.protobuf.message.Message):
 
     ACTION_FIELD_NUMBER: builtins.int
     VERSION_FIELD_NUMBER: builtins.int
-    action: global___DowngradeRequest.DowngradeAction.ValueType
+    action: Global___DowngradeRequest.DowngradeAction.ValueType
     """action is the kind of downgrade request to issue. The action may
     VALIDATE the target version, DOWNGRADE the cluster version,
     or CANCEL the current downgrading job.
@@ -2201,14 +2201,14 @@ class DowngradeRequest(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        action: global___DowngradeRequest.DowngradeAction.ValueType = ...,
+        action: Global___DowngradeRequest.DowngradeAction.ValueType = ...,
         version: builtins.str = ...,
     ) -> None: ...
     def ClearField(
         self, field_name: typing.Literal["action", b"action", "version", b"version"]
     ) -> None: ...
 
-global___DowngradeRequest = DowngradeRequest
+Global___DowngradeRequest: typing_extensions.TypeAlias = DowngradeRequest
 
 @typing.final
 class DowngradeResponse(google.protobuf.message.Message):
@@ -2219,11 +2219,11 @@ class DowngradeResponse(google.protobuf.message.Message):
     version: builtins.str
     """version is the current cluster version."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         version: builtins.str = ...,
     ) -> None: ...
     def HasField(
@@ -2233,7 +2233,7 @@ class DowngradeResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "version", b"version"]
     ) -> None: ...
 
-global___DowngradeResponse = DowngradeResponse
+Global___DowngradeResponse: typing_extensions.TypeAlias = DowngradeResponse
 
 @typing.final
 class StatusRequest(google.protobuf.message.Message):
@@ -2243,7 +2243,7 @@ class StatusRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___StatusRequest = StatusRequest
+Global___StatusRequest: typing_extensions.TypeAlias = StatusRequest
 
 @typing.final
 class StatusResponse(google.protobuf.message.Message):
@@ -2279,7 +2279,7 @@ class StatusResponse(google.protobuf.message.Message):
     storageVersion: builtins.str
     """storageVersion is the version of the db file. It might be get updated with delay in relationship to the target cluster version."""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def errors(
         self,
@@ -2289,7 +2289,7 @@ class StatusResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         version: builtins.str = ...,
         dbSize: builtins.int = ...,
         leader: builtins.int = ...,
@@ -2332,7 +2332,7 @@ class StatusResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___StatusResponse = StatusResponse
+Global___StatusResponse: typing_extensions.TypeAlias = StatusResponse
 
 @typing.final
 class AuthEnableRequest(google.protobuf.message.Message):
@@ -2342,7 +2342,7 @@ class AuthEnableRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___AuthEnableRequest = AuthEnableRequest
+Global___AuthEnableRequest: typing_extensions.TypeAlias = AuthEnableRequest
 
 @typing.final
 class AuthDisableRequest(google.protobuf.message.Message):
@@ -2352,7 +2352,7 @@ class AuthDisableRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___AuthDisableRequest = AuthDisableRequest
+Global___AuthDisableRequest: typing_extensions.TypeAlias = AuthDisableRequest
 
 @typing.final
 class AuthStatusRequest(google.protobuf.message.Message):
@@ -2362,7 +2362,7 @@ class AuthStatusRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___AuthStatusRequest = AuthStatusRequest
+Global___AuthStatusRequest: typing_extensions.TypeAlias = AuthStatusRequest
 
 @typing.final
 class AuthenticateRequest(google.protobuf.message.Message):
@@ -2382,7 +2382,7 @@ class AuthenticateRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["name", b"name", "password", b"password"]
     ) -> None: ...
 
-global___AuthenticateRequest = AuthenticateRequest
+Global___AuthenticateRequest: typing_extensions.TypeAlias = AuthenticateRequest
 
 @typing.final
 class AuthUserAddRequest(google.protobuf.message.Message):
@@ -2422,7 +2422,7 @@ class AuthUserAddRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___AuthUserAddRequest = AuthUserAddRequest
+Global___AuthUserAddRequest: typing_extensions.TypeAlias = AuthUserAddRequest
 
 @typing.final
 class AuthUserGetRequest(google.protobuf.message.Message):
@@ -2437,7 +2437,7 @@ class AuthUserGetRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["name", b"name"]) -> None: ...
 
-global___AuthUserGetRequest = AuthUserGetRequest
+Global___AuthUserGetRequest: typing_extensions.TypeAlias = AuthUserGetRequest
 
 @typing.final
 class AuthUserDeleteRequest(google.protobuf.message.Message):
@@ -2453,7 +2453,7 @@ class AuthUserDeleteRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["name", b"name"]) -> None: ...
 
-global___AuthUserDeleteRequest = AuthUserDeleteRequest
+Global___AuthUserDeleteRequest: typing_extensions.TypeAlias = AuthUserDeleteRequest
 
 @typing.final
 class AuthUserChangePasswordRequest(google.protobuf.message.Message):
@@ -2487,7 +2487,9 @@ class AuthUserChangePasswordRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___AuthUserChangePasswordRequest = AuthUserChangePasswordRequest
+Global___AuthUserChangePasswordRequest: typing_extensions.TypeAlias = (
+    AuthUserChangePasswordRequest
+)
 
 @typing.final
 class AuthUserGrantRoleRequest(google.protobuf.message.Message):
@@ -2509,7 +2511,9 @@ class AuthUserGrantRoleRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["role", b"role", "user", b"user"]
     ) -> None: ...
 
-global___AuthUserGrantRoleRequest = AuthUserGrantRoleRequest
+Global___AuthUserGrantRoleRequest: typing_extensions.TypeAlias = (
+    AuthUserGrantRoleRequest
+)
 
 @typing.final
 class AuthUserRevokeRoleRequest(google.protobuf.message.Message):
@@ -2529,7 +2533,9 @@ class AuthUserRevokeRoleRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["name", b"name", "role", b"role"]
     ) -> None: ...
 
-global___AuthUserRevokeRoleRequest = AuthUserRevokeRoleRequest
+Global___AuthUserRevokeRoleRequest: typing_extensions.TypeAlias = (
+    AuthUserRevokeRoleRequest
+)
 
 @typing.final
 class AuthRoleAddRequest(google.protobuf.message.Message):
@@ -2545,7 +2551,7 @@ class AuthRoleAddRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["name", b"name"]) -> None: ...
 
-global___AuthRoleAddRequest = AuthRoleAddRequest
+Global___AuthRoleAddRequest: typing_extensions.TypeAlias = AuthRoleAddRequest
 
 @typing.final
 class AuthRoleGetRequest(google.protobuf.message.Message):
@@ -2560,7 +2566,7 @@ class AuthRoleGetRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["role", b"role"]) -> None: ...
 
-global___AuthRoleGetRequest = AuthRoleGetRequest
+Global___AuthRoleGetRequest: typing_extensions.TypeAlias = AuthRoleGetRequest
 
 @typing.final
 class AuthUserListRequest(google.protobuf.message.Message):
@@ -2570,7 +2576,7 @@ class AuthUserListRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___AuthUserListRequest = AuthUserListRequest
+Global___AuthUserListRequest: typing_extensions.TypeAlias = AuthUserListRequest
 
 @typing.final
 class AuthRoleListRequest(google.protobuf.message.Message):
@@ -2580,7 +2586,7 @@ class AuthRoleListRequest(google.protobuf.message.Message):
         self,
     ) -> None: ...
 
-global___AuthRoleListRequest = AuthRoleListRequest
+Global___AuthRoleListRequest: typing_extensions.TypeAlias = AuthRoleListRequest
 
 @typing.final
 class AuthRoleDeleteRequest(google.protobuf.message.Message):
@@ -2595,7 +2601,7 @@ class AuthRoleDeleteRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["role", b"role"]) -> None: ...
 
-global___AuthRoleDeleteRequest = AuthRoleDeleteRequest
+Global___AuthRoleDeleteRequest: typing_extensions.TypeAlias = AuthRoleDeleteRequest
 
 @typing.final
 class AuthRoleGrantPermissionRequest(google.protobuf.message.Message):
@@ -2622,7 +2628,9 @@ class AuthRoleGrantPermissionRequest(google.protobuf.message.Message):
         self, field_name: typing.Literal["name", b"name", "perm", b"perm"]
     ) -> None: ...
 
-global___AuthRoleGrantPermissionRequest = AuthRoleGrantPermissionRequest
+Global___AuthRoleGrantPermissionRequest: typing_extensions.TypeAlias = (
+    AuthRoleGrantPermissionRequest
+)
 
 @typing.final
 class AuthRoleRevokePermissionRequest(google.protobuf.message.Message):
@@ -2648,7 +2656,9 @@ class AuthRoleRevokePermissionRequest(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___AuthRoleRevokePermissionRequest = AuthRoleRevokePermissionRequest
+Global___AuthRoleRevokePermissionRequest: typing_extensions.TypeAlias = (
+    AuthRoleRevokePermissionRequest
+)
 
 @typing.final
 class AuthEnableResponse(google.protobuf.message.Message):
@@ -2656,18 +2666,18 @@ class AuthEnableResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthEnableResponse = AuthEnableResponse
+Global___AuthEnableResponse: typing_extensions.TypeAlias = AuthEnableResponse
 
 @typing.final
 class AuthDisableResponse(google.protobuf.message.Message):
@@ -2675,18 +2685,18 @@ class AuthDisableResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthDisableResponse = AuthDisableResponse
+Global___AuthDisableResponse: typing_extensions.TypeAlias = AuthDisableResponse
 
 @typing.final
 class AuthStatusResponse(google.protobuf.message.Message):
@@ -2699,11 +2709,11 @@ class AuthStatusResponse(google.protobuf.message.Message):
     authRevision: builtins.int
     """authRevision is the current revision of auth store"""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         enabled: builtins.bool = ...,
         authRevision: builtins.int = ...,
     ) -> None: ...
@@ -2717,7 +2727,7 @@ class AuthStatusResponse(google.protobuf.message.Message):
         ],
     ) -> None: ...
 
-global___AuthStatusResponse = AuthStatusResponse
+Global___AuthStatusResponse: typing_extensions.TypeAlias = AuthStatusResponse
 
 @typing.final
 class AuthenticateResponse(google.protobuf.message.Message):
@@ -2728,11 +2738,11 @@ class AuthenticateResponse(google.protobuf.message.Message):
     token: builtins.str
     """token is an authorized token that can be used in succeeding RPCs"""
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         token: builtins.str = ...,
     ) -> None: ...
     def HasField(
@@ -2742,7 +2752,7 @@ class AuthenticateResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "token", b"token"]
     ) -> None: ...
 
-global___AuthenticateResponse = AuthenticateResponse
+Global___AuthenticateResponse: typing_extensions.TypeAlias = AuthenticateResponse
 
 @typing.final
 class AuthUserAddResponse(google.protobuf.message.Message):
@@ -2750,18 +2760,18 @@ class AuthUserAddResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthUserAddResponse = AuthUserAddResponse
+Global___AuthUserAddResponse: typing_extensions.TypeAlias = AuthUserAddResponse
 
 @typing.final
 class AuthUserGetResponse(google.protobuf.message.Message):
@@ -2770,7 +2780,7 @@ class AuthUserGetResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     ROLES_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def roles(
         self,
@@ -2780,7 +2790,7 @@ class AuthUserGetResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         roles: collections.abc.Iterable[builtins.str] | None = ...,
     ) -> None: ...
     def HasField(
@@ -2790,7 +2800,7 @@ class AuthUserGetResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "roles", b"roles"]
     ) -> None: ...
 
-global___AuthUserGetResponse = AuthUserGetResponse
+Global___AuthUserGetResponse: typing_extensions.TypeAlias = AuthUserGetResponse
 
 @typing.final
 class AuthUserDeleteResponse(google.protobuf.message.Message):
@@ -2798,18 +2808,18 @@ class AuthUserDeleteResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthUserDeleteResponse = AuthUserDeleteResponse
+Global___AuthUserDeleteResponse: typing_extensions.TypeAlias = AuthUserDeleteResponse
 
 @typing.final
 class AuthUserChangePasswordResponse(google.protobuf.message.Message):
@@ -2817,18 +2827,20 @@ class AuthUserChangePasswordResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthUserChangePasswordResponse = AuthUserChangePasswordResponse
+Global___AuthUserChangePasswordResponse: typing_extensions.TypeAlias = (
+    AuthUserChangePasswordResponse
+)
 
 @typing.final
 class AuthUserGrantRoleResponse(google.protobuf.message.Message):
@@ -2836,18 +2848,20 @@ class AuthUserGrantRoleResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthUserGrantRoleResponse = AuthUserGrantRoleResponse
+Global___AuthUserGrantRoleResponse: typing_extensions.TypeAlias = (
+    AuthUserGrantRoleResponse
+)
 
 @typing.final
 class AuthUserRevokeRoleResponse(google.protobuf.message.Message):
@@ -2855,18 +2869,20 @@ class AuthUserRevokeRoleResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthUserRevokeRoleResponse = AuthUserRevokeRoleResponse
+Global___AuthUserRevokeRoleResponse: typing_extensions.TypeAlias = (
+    AuthUserRevokeRoleResponse
+)
 
 @typing.final
 class AuthRoleAddResponse(google.protobuf.message.Message):
@@ -2874,18 +2890,18 @@ class AuthRoleAddResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthRoleAddResponse = AuthRoleAddResponse
+Global___AuthRoleAddResponse: typing_extensions.TypeAlias = AuthRoleAddResponse
 
 @typing.final
 class AuthRoleGetResponse(google.protobuf.message.Message):
@@ -2894,7 +2910,7 @@ class AuthRoleGetResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     PERM_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def perm(
         self,
@@ -2904,7 +2920,7 @@ class AuthRoleGetResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         perm: collections.abc.Iterable[etcd3.rpc.auth_pb2.Permission] | None = ...,
     ) -> None: ...
     def HasField(
@@ -2914,7 +2930,7 @@ class AuthRoleGetResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "perm", b"perm"]
     ) -> None: ...
 
-global___AuthRoleGetResponse = AuthRoleGetResponse
+Global___AuthRoleGetResponse: typing_extensions.TypeAlias = AuthRoleGetResponse
 
 @typing.final
 class AuthRoleListResponse(google.protobuf.message.Message):
@@ -2923,7 +2939,7 @@ class AuthRoleListResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     ROLES_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def roles(
         self,
@@ -2933,7 +2949,7 @@ class AuthRoleListResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         roles: collections.abc.Iterable[builtins.str] | None = ...,
     ) -> None: ...
     def HasField(
@@ -2943,7 +2959,7 @@ class AuthRoleListResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "roles", b"roles"]
     ) -> None: ...
 
-global___AuthRoleListResponse = AuthRoleListResponse
+Global___AuthRoleListResponse: typing_extensions.TypeAlias = AuthRoleListResponse
 
 @typing.final
 class AuthUserListResponse(google.protobuf.message.Message):
@@ -2952,7 +2968,7 @@ class AuthUserListResponse(google.protobuf.message.Message):
     HEADER_FIELD_NUMBER: builtins.int
     USERS_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     @property
     def users(
         self,
@@ -2962,7 +2978,7 @@ class AuthUserListResponse(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
         users: collections.abc.Iterable[builtins.str] | None = ...,
     ) -> None: ...
     def HasField(
@@ -2972,7 +2988,7 @@ class AuthUserListResponse(google.protobuf.message.Message):
         self, field_name: typing.Literal["header", b"header", "users", b"users"]
     ) -> None: ...
 
-global___AuthUserListResponse = AuthUserListResponse
+Global___AuthUserListResponse: typing_extensions.TypeAlias = AuthUserListResponse
 
 @typing.final
 class AuthRoleDeleteResponse(google.protobuf.message.Message):
@@ -2980,18 +2996,18 @@ class AuthRoleDeleteResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthRoleDeleteResponse = AuthRoleDeleteResponse
+Global___AuthRoleDeleteResponse: typing_extensions.TypeAlias = AuthRoleDeleteResponse
 
 @typing.final
 class AuthRoleGrantPermissionResponse(google.protobuf.message.Message):
@@ -2999,18 +3015,20 @@ class AuthRoleGrantPermissionResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthRoleGrantPermissionResponse = AuthRoleGrantPermissionResponse
+Global___AuthRoleGrantPermissionResponse: typing_extensions.TypeAlias = (
+    AuthRoleGrantPermissionResponse
+)
 
 @typing.final
 class AuthRoleRevokePermissionResponse(google.protobuf.message.Message):
@@ -3018,15 +3036,17 @@ class AuthRoleRevokePermissionResponse(google.protobuf.message.Message):
 
     HEADER_FIELD_NUMBER: builtins.int
     @property
-    def header(self) -> global___ResponseHeader: ...
+    def header(self) -> Global___ResponseHeader: ...
     def __init__(
         self,
         *,
-        header: global___ResponseHeader | None = ...,
+        header: Global___ResponseHeader | None = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing.Literal["header", b"header"]
     ) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["header", b"header"]) -> None: ...
 
-global___AuthRoleRevokePermissionResponse = AuthRoleRevokePermissionResponse
+Global___AuthRoleRevokePermissionResponse: typing_extensions.TypeAlias = (
+    AuthRoleRevokePermissionResponse
+)
