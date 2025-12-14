@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import pytest
-from conftest import KeyFactory
+from conftest import BinaryKeyFactory, KeyFactory
 
 import etcd3
 import etcd3.base
@@ -35,6 +35,66 @@ def get_fixture(client1) -> Tuple[etcd3.Etcd3Client, KeyFactory]:
         client1.put(_keyspace(f"test/{i}"), f"test/val/{i}".encode("utf-8"))
 
     return client1, _keyspace
+
+
+@pytest.fixture(scope="session")
+def get_binary_fixture(client1) -> Tuple[etcd3.Etcd3Client, BinaryKeyFactory]:
+    """
+    Fixture for tests that creates specially crafted binary keys used to
+    exercise prefix 'overflow'.
+    """
+
+    def _keyspace(key: bytes) -> bytes:
+        return b"\xff" + key
+
+    for i in range(256):
+        client1.put(
+            _keyspace(b"\xfe\xff" + i.to_bytes(length=1)), value=i.to_bytes(length=4)
+        )
+
+    for i in range(256):
+        client1.put(
+            _keyspace(b"\xff\xfe" + i.to_bytes(length=1)), value=i.to_bytes(length=8)
+        )
+
+    for i in range(256):
+        client1.put(
+            _keyspace(b"\xff\xff" + i.to_bytes(length=1)), value=i.to_bytes(length=8)
+        )
+
+    return client1, _keyspace
+
+
+def test_get_binary_prefix1(get_binary_fixture):
+    client1, keyspace = get_binary_fixture
+
+    test_key = keyspace(b"\xfe\xff")
+    result = list(client1.get_prefix(key_prefix=test_key))
+
+    assert len(result) == 256
+    for value, _ in result:
+        # KVs with the desired prefixes have all values 4 bytes long
+        # assert for this to discover possible mix-up with the keys in
+        # the next prefix
+        assert len(value) == 4
+
+
+def test_get_binary_prefix2(get_binary_fixture):
+    client1, keyspace = get_binary_fixture
+
+    test_key = keyspace(b"\xff\xff")
+    result = list(client1.get_prefix(key_prefix=test_key))
+
+    assert len(result) == 256
+    for value, _ in result:
+        assert len(value) == 8
+
+    test_key = keyspace(b"\xff")
+    result = list(client1.get_prefix(key_prefix=test_key))
+
+    assert len(result) == 512
+    for value, _ in result:
+        assert len(value) == 8
 
 
 def test_get(get_fixture):

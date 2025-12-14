@@ -11,13 +11,33 @@ def range_end_for_key(maybe_bytestring: Union[str, bytes]) -> bytes:
     :param maybe_bytestring: key
     :return: another key, byte representation
     """
-    return increment_last_byte(to_bytes(maybe_bytestring))
+    key = bytearray(to_bytes(maybe_bytestring))
 
+    # the happy path is that the last byte is not 0xFF; in that
+    # case just bump that and go on
+    if key[-1] != 0xFF:
+        key[-1] = key[-1] + 1
 
-def increment_last_byte(byte_string: bytes) -> bytes:
-    s = bytearray(byte_string)
-    s[-1] = s[-1] + 1
-    return bytes(s)
+        return bytes(key)
+
+    # but if it is 0xFF, bumping it by one will not work as
+    # single byte cannot hold such value.
+    #
+    # in that case, the range end is obtained by shaving off
+    # the last byte. Then the 'new' last byte is increased
+    # by one instead. This can possibly happen multiple times.
+    for i in range(len(key) - 2, -1, -1):
+        if key[i] != 0xFF:
+            key[i] += 1
+
+            return bytes(key[: i + 1])
+
+    # this hits if the prefix has all bytes 0xFF; in that case use
+    # the explicitly documented range_end of 0x00.
+    #
+    # see: https://github.com/etcd-io/etcd/blob/d99edb648af6f7ef45b346f97c25def0533e107c/api/etcdserverpb/rpc.proto#L451
+    # see local file: proto/etcd3/rpc/rpc.proto:246
+    return b"\x00"
 
 
 def to_bytes(maybe_bytestring: Union[str, bytes]) -> bytes:

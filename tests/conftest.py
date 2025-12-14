@@ -25,6 +25,7 @@ def client1(etcd_nodes):
 
 
 KeyFactory: TypeAlias = Callable[[str], bytes]
+BinaryKeyFactory: TypeAlias = Callable[[bytes], bytes]
 
 
 @pytest.fixture(scope="function")
