@@ -10,6 +10,15 @@ to the original package.
 
 ## Changelog
 
+### 0.102.0
+
+- Fixed bad range_end computation logic
+  - This was not ready for keys whose last byte is `0xFF`
+  - It only implemented the happy path which worked fine when the keys / prefixes
+    were strings (`0xFF` is not a 'normal' character). There is solid change for
+    breakage when keys provided by caller are binary
+
+
 ### 0.101.0
 
 - No functional changes
