@@ -72,3 +72,23 @@ def test_funky_timeout(throwaway_client):
 
     with pytest.raises(etcd3.ConnectionTimeoutError):
         throwaway_client.get("foo")
+
+
+def test_connection_failure_exception_during_paged_get(throwaway_client):
+    exception = MockedException(grpc.StatusCode.UNAVAILABLE)
+    kv_mock = mock.MagicMock()
+    kv_mock.Range.side_effect = exception
+    throwaway_client.kvstub = kv_mock
+
+    with pytest.raises(etcd3.ConnectionFailedError):
+        _ = list(throwaway_client.get_prefix_paged(key_prefix="test"))
+
+
+def test_connection_timeout_exception_during_paged_get(throwaway_client):
+    exception = MockedException(grpc.StatusCode.DEADLINE_EXCEEDED)
+    kv_mock = mock.MagicMock()
+    kv_mock.Range.side_effect = exception
+    throwaway_client.kvstub = kv_mock
+
+    with pytest.raises(etcd3.ConnectionTimeoutError):
+        _ = list(throwaway_client.get_prefix_paged(key_prefix="test"))

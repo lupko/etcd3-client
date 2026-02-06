@@ -520,6 +520,7 @@ class Etcd3Client:
         for kv in range_response.kvs:
             yield kv.value, KVMetadata.create(kv, range_response.header)
 
+    @_handle_errors
     def get_range_paged(
         self,
         range_start: Union[str, bytes],
