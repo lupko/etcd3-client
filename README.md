@@ -10,6 +10,12 @@ to the original package.
 
 ## Changelog
 
+### 0.103.0
+
+- Fixed error handling for paged queries
+  - Error translation was not done for these so errors flew through without
+    conversion to client-specific ones
+
 ### 0.102.0
 
 - Fixed bad range_end computation logic
