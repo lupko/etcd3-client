@@ -8,6 +8,29 @@ This package is forked from the now-dead [python-etcd3](https://github.com/kragn
 the last released version of the python-etcd3 which is 0.12.0; the [AUTHORS](./AUTHORS.md) lists all committers
 to the original package.
 
+### Project Status
+
+At this point, the project is 'done': as much as any software project is ever done :)
+
+Functionality and feature wise the project has everything I want and need and covers
+the majority of the etcd APIs. There is a rare bugfix here and there. There are bumps
+of the protobuf and gRPC dependencies and regeneration of the gRPC/protobuf artifacts.
+
+That means the repo activity is near zero. That also means I rarely check the repo and
+may miss issues. But it does not mean the project is dead. Production systems use this
+and while they do the maintenance will be ongoing.
+
+## Installation & Usage
+
+There are no PyPi packages but wheels are available in [releases](https://github.com/lupko/etcd3-client/releases).
+You can install the wheels with pip too:
+
+```shell
+pip install https://github.com/lupko/etcd3-client/releases/download/0.103.0/etcd3_client-0.103.0-py3-none-any.whl
+```
+
+For a quick tour of the client API, see [docs/getting-started.md](./docs/getting-started.md).
+
 ## Changelog
 
 ### 0.103.0
