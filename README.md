@@ -33,6 +33,16 @@ For a quick tour of the client API, see [docs/getting-started.md](./docs/getting
 
 ## Changelog
 
+### 0.104.0
+
+- Added new APIs for pages gets
+  - `get_range_paged_response` - yields pages of RangeResponse
+  - `get_prefix_paged_response` - yields pages of RangeResponse for prefix
+- Includes fixes around revision handling in paged gets
+  - The code did not match the documented intent
+  - Revision <= 0 did not lock revision after the first page
+  - All due to trivial, typo-like bug
+
 ### 0.103.0
 
 - Fixed error handling for paged queries
