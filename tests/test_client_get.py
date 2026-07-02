@@ -218,6 +218,21 @@ def test_get_prefix_sort_target(get_fixture):
     assert results[-1][1].key == last_key
 
 
+def test_get_prefix_paged_response(get_fixture):
+    client1, keyspace = get_fixture
+    prefix = keyspace("test/")
+
+    results = list(client1.get_prefix(prefix))
+    paged_responses = list(client1.get_prefix_paged_response(prefix, page_size=3))
+
+    kvs = [kv for response in paged_responses for kv in response.kvs]
+    assert len(kvs) == len(results)
+
+    for paged_result, non_paged_result in zip(kvs, results):
+        assert paged_result.key == non_paged_result[1].key
+        assert paged_result.value == non_paged_result[0]
+
+
 def test_get_prefix_paged(get_fixture):
     client1, keyspace = get_fixture
     prefix = keyspace("test/")

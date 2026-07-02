@@ -521,6 +521,127 @@ class Etcd3Client:
             yield kv.value, KVMetadata.create(kv, range_response.header)
 
     @_handle_errors
+    def get_range_paged_response(
+        self,
+        range_start: Union[str, bytes],
+        range_end: Union[str, bytes],
+        keys_only: bool = False,
+        page_size: int = 1000,
+        serializable: bool = False,
+        revision: int = 0,
+        timeout_override: Optional[int] = None,
+    ) -> Generator[etcdrpc.RangeResponse, None, None]:
+        """
+        Gets a range of keys, while using pagination to read the data from etcd. Yields responses - one
+        response per page.
+
+        This method is useful if you do stream processing on large amount of keys. For non-paged range get methods,
+        even if a generator is used to produce the results, the gRPC client will read the whole response into memory
+        which can result in RSS usage spikes. If you want to mitigate such spikes, then paging is the answer.
+
+        The limitation for paged gets is, that you cannot specify the sort order: the results will be paged in
+        the default, key-ascending order.
+
+        Note on revision handling during pagination:
+
+        - If you explicitly specify `revision`, then that revision will be used to obtain all pages of the result.
+        - If you do not specify `revision` - indicating that you want to get the latest data - then
+          the get of the first page will establish what this latest revision is and will 'anchor' all subsequent
+          page gets to that same revision. You can find that revision by inspecting the response header.
+
+        :param range_start: first key in range
+        :param range_end: last key in range
+        :param keys_only: if True, retrieve only the keys, not the values
+        :param page_size: number of keys to get on each page; each page is a separate call to etcd
+        :param serializable: whether to allow serializable reads. This can
+            result in stale reads
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
+        :returns: generator of responses
+        """
+        if page_size <= 0:
+            raise ValueError("page_size must be a positive number.")
+
+        _revision = revision
+        page_start = to_bytes(range_start)
+
+        while True:
+            range_request = build_get_range_request(
+                key=page_start,
+                range_end=range_end,
+                keys_only=keys_only,
+                limit=page_size,
+                serializable=serializable,
+                revision=_revision,
+            )
+
+            response: etcdrpc.RangeResponse = self.kvstub.Range(
+                range_request,
+                timeout_override or self.timeout,
+                credentials=self.call_credentials,
+                metadata=self.metadata,
+            )
+
+            if _revision <= 0:
+                # caller wanted 'latest revision' - the get of the first page 'establishes' what
+                # this latest revision is; subsequent pages will be read at that revision to get
+                # consistent results
+
+                _revision = response.header.revision
+
+            yield response
+
+            if not response.more:
+                break
+
+            last_kv: Optional[etcdrpc.KeyValue] = response.kvs[-1]
+            assert last_kv is not None
+
+            # this adds +1 to the last key found on current page -> when such
+            # key is used as range start, it will continue reading the next page
+            page_start = range_end_for_key(last_kv.key)
+
+    def get_prefix_paged_response(
+        self,
+        key_prefix: Union[str, bytes],
+        keys_only: bool = False,
+        page_size: int = 1000,
+        serializable: bool = False,
+        revision: int = 0,
+        timeout_override: Optional[int] = None,
+    ) -> Generator[etcdrpc.RangeResponse, None, None]:
+        """
+        Gets all keys starting with a prefix. Uses pagination to obtain the results.
+
+        This is a convenience wrapper for `get_range_paged_response`. See that method for more information
+        about paged gets, when they are useful and what are the limitations.
+
+        :param key_prefix: key prefix
+        :param keys_only: if True, retrieve only the keys, not the values
+        :param page_size: number of keys to get on each page; each page is a separate call to etcd
+        :param serializable: whether to allow serializable reads. This can
+            result in stale reads
+        :param revision: optionally specify store revision at which the get should be done; when not specified or lower or equal
+         to zero, the get will be done on the latest version of the store
+        :param timeout_override: optionally specify timeout for just this one call; if not
+         specified, the global timeout set during client creation will be used
+        :returns: generator of responses
+        """
+
+        range_end = range_end_for_key(key_prefix)
+
+        yield from self.get_range_paged_response(
+            range_start=key_prefix,
+            range_end=range_end,
+            keys_only=keys_only,
+            page_size=page_size,
+            serializable=serializable,
+            revision=revision,
+            timeout_override=timeout_override,
+        )
+
     def get_range_paged(
         self,
         range_start: Union[str, bytes],
@@ -562,51 +683,19 @@ class Etcd3Client:
          specified, the global timeout set during client creation will be used
         :returns: generator of (value, metadata) tuples
         """
-        if page_size <= 0:
-            raise ValueError("page_size must be a positive number.")
+        pages = self.get_range_paged_response(
+            range_start=range_start,
+            range_end=range_end,
+            keys_only=keys_only,
+            page_size=page_size,
+            serializable=serializable,
+            revision=revision,
+            timeout_override=timeout_override,
+        )
 
-        _revision = revision
-        page_start = to_bytes(range_start)
-
-        while True:
-            range_request = build_get_range_request(
-                key=page_start,
-                range_end=range_end,
-                keys_only=keys_only,
-                limit=page_size,
-                serializable=serializable,
-                revision=revision,
-            )
-
-            response: etcdrpc.RangeResponse = self.kvstub.Range(
-                range_request,
-                timeout_override or self.timeout,
-                credentials=self.call_credentials,
-                metadata=self.metadata,
-            )
-
-            if _revision == 0:
-                # caller wanted 'latest revision' - the get of the first page 'establishes' what
-                # this latest revision is; subsequent pages will be read at that revision to get
-                # consistent results
-
-                _revision = response.header.revision
-
-            last_key_on_page: Optional[bytes] = None
-            for kv in response.kvs:
-                last_key_on_page = kv.key
-
-                yield kv.value, KVMetadata.create(kv, response.header)
-
-            if not response.more:
-                # no more pages
-                break
-
-            assert last_key_on_page is not None
-
-            # this adds +1 to the last key found on current page -> when such
-            # key is used as range start, it will continue reading the next page
-            page_start = range_end_for_key(last_key_on_page)
+        for page in pages:
+            for kv in page.kvs:
+                yield kv.value, KVMetadata.create(kv, page.header)
 
     def get_prefix_paged(
         self,
